@@ -1,0 +1,37 @@
+# TEMPORARY deploy bridge — remove once native Vercel Git integration is connected.
+#
+# The Vercel GitHub App does not have access to this repo yet (new repos are
+# not auto-added to the installation). Until someone grants access in
+# Vercel Dashboard → forlex-landing-pages → Settings → Git → Connect Git
+# Repository (1 click), this workflow deploys instead:
+#   - push to main        → production deploy
+#   - pull_request        → preview deploy (URL in the action log)
+# After connecting native Git integration, DELETE this file to avoid double
+# deploys (native + action would both fire).
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  vercel:
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - name: Pull Vercel env (project settings check)
+        run: npx -y vercel@latest pull --yes --environment=${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }} --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Deploy to production
+        if: github.ref == 'refs/heads/main'
+        run: npx -y vercel@latest deploy --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Deploy preview
+        if: github.ref != 'refs/heads/main'
+        run: npx -y vercel@latest deploy --yes --token=${{ secrets.VERCEL_TOKEN }}
