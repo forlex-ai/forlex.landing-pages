@@ -1,0 +1,26 @@
+{
+  "slug": "upgrade-premium",
+  "version": "LP_B_upgrade_v1",
+  "title": "Forlex Premium com 30% off em parceria com a OAB | Para quem já usa o Starter",
+  "description": "Você já usa o Starter. No Forlex Premium, com 30% off em parceria com a OAB, você ganha 10 ACUs por mês, documentos, Vault e casos com a LIVIA, fluxos e integrações com ferramentas selecionadas.",
+  "canonicalPath": "/upgrade-premium",
+  "sourceFile": "source.html",
+  "expectedCtaCount": 6,
+  "expectedUtm": {
+    "utm_source": "meta",
+    "utm_medium": "paid_social",
+    "utm_campaign": "convenio_oab",
+    "utm_content": "lp_b_upgrade"
+  },
+  "ctaDestinationPrefix": "https://app.forlex.ai/login",
+  "og": {
+    "title": "Forlex Premium com 30% off em parceria com a OAB",
+    "description": "Você já usa o Starter. Faça upgrade para o Premium com 30% off: 10 ACUs/mês, documentos, Vault, casos com a LIVIA, fluxos e integrações.",
+    "imagePath": "/og/upgrade-premium.png",
+    "imageWidth": 1200,
+    "imageHeight": 630,
+    "imageAlt": "Forlex Premium com 30% off em parceria com a OAB"
+  },
+  "robots": "noindex",
+  "notes": "ENG-4705 LP B (upgrade Starter -> Premium). Source: LP_B_upgrade_v1.html single-file build with base64 fonts/images. Flags: ?static=1 (no animation). Respects prefers-reduced-motion."
+}

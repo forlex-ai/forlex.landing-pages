@@ -1,0 +1,26 @@
+{
+  "slug": "__SLUG__",
+  "version": "v1",
+  "title": "__TITLE__",
+  "description": "__DESCRIPTION__",
+  "canonicalPath": "/__SLUG__",
+  "sourceFile": "source.html",
+  "expectedCtaCount": 1,
+  "expectedUtm": {
+    "utm_source": "meta",
+    "utm_medium": "paid_social",
+    "utm_campaign": "convenio_oab",
+    "utm_content": "__SLUG__"
+  },
+  "ctaDestinationPrefix": "https://app.forlex.ai/login",
+  "og": {
+    "title": "__TITLE__",
+    "description": "__DESCRIPTION__",
+    "imagePath": "/og/__SLUG__.png",
+    "imageWidth": 1200,
+    "imageHeight": 630,
+    "imageAlt": "__TITLE__"
+  },
+  "robots": "noindex",
+  "notes": "Update expectedCtaCount/expectedUtm/og after pasting final HTML."
+}

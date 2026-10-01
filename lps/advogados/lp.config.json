@@ -1,0 +1,26 @@
+{
+  "slug": "advogados",
+  "version": "LP_A_v4.4",
+  "title": "Forlex: muito além do chat de IA | Starter grátis pela parceria com a OAB",
+  "description": "Seu ChatGPT conversa. A Forlex trabalha em todas as etapas do seu processo: processos pela OAB ou CNJ, documentos com IA, Vault, CLM e gestão do escritório. Advogados com inscrição ativa na OAB têm acesso ao Starter grátis pela parceria com a OAB Nacional.",
+  "canonicalPath": "/advogados",
+  "sourceFile": "source.html",
+  "expectedCtaCount": 7,
+  "expectedUtm": {
+    "utm_source": "meta",
+    "utm_medium": "paid_social",
+    "utm_campaign": "convenio_oab",
+    "utm_content": "lp_a"
+  },
+  "ctaDestinationPrefix": "https://app.forlex.ai/login",
+  "og": {
+    "title": "Forlex: muito além do chat de IA | Starter grátis pela parceria com a OAB",
+    "description": "Advogados com OAB ativa têm acesso ao Starter grátis pela parceria Forlex + OAB Nacional. Processos, documentos com IA, Vault e gestão do escritório.",
+    "imagePath": "/og/advogados.png",
+    "imageWidth": 1200,
+    "imageHeight": 630,
+    "imageAlt": "Forlex + OAB Nacional — Starter grátis para advogados"
+  },
+  "robots": "noindex",
+  "notes": "ENG-4705 LP A (novos usuários). Source: LP_A_v4.4.html single-file build with base64 fonts/images. Flags: ?static=1 (no animation), ?brands=0 (fixed headline). Respects prefers-reduced-motion."
+}

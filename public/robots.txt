@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /
+
+# LPs are campaign surfaces (paid traffic). Indexation is per-LP via robots meta.
+# ENG-4705: both LPs ship `noindex` until João confirms. Keep Disallow until then.

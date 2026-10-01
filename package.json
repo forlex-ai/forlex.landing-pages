@@ -1,0 +1,27 @@
+{
+  "name": "@forlex/landing-pages",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Forlex landing pages — static-first LP repo deployed to Vercel (lp.forlex.ai). Drop-in HTML workflow for campaign LPs.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "node scripts/build.mjs",
+    "qa": "node scripts/qa.mjs",
+    "qa:built": "node scripts/qa.mjs --dir=dist",
+    "new-lp": "node scripts/new-lp.mjs",
+    "extract-assets": "node scripts/extract-assets.mjs",
+    "clean": "rm -rf dist .tmp",
+    "test": "npm run build && npm run qa:built"
+  },
+  "keywords": [
+    "forlex",
+    "landing-pages",
+    "vercel",
+    "static"
+  ],
+  "license": "UNLICENSED"
+}
