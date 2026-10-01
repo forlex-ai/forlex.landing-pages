@@ -17,7 +17,7 @@ jobs:
       - run: npm install --no-audit --no-fund
       - run: npm run build
         env:
-          LP_BASE_URL: https://lp.forlex.ai
+          LP_BASE_URL: https://go.forlex.ai
           LP_POSTHOG_HOST: https://b.forlex.ai
           LP_ROBOTS: noindex
           LP_DISABLE_TRACKING: 'true'
@@ -34,7 +34,7 @@ jobs:
       - run: npm install --no-audit --no-fund
       - run: npm run build
         env:
-          LP_BASE_URL: https://lp.forlex.ai
+          LP_BASE_URL: https://go.forlex.ai
           LP_POSTHOG_HOST: https://b.forlex.ai
           LP_ROBOTS: noindex
           LP_DISABLE_TRACKING: 'true'
