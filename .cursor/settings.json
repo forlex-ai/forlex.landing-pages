@@ -1,0 +1,16 @@
+{
+  "plugins": {
+    "figma": {
+      "enabled": true
+    },
+    "vercel": {
+      "enabled": true
+    },
+    "posthog": {
+      "enabled": true
+    },
+    "linear": {
+      "enabled": true
+    }
+  }
+}

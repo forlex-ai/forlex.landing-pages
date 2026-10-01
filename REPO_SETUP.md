@@ -1,7 +1,14 @@
 # New repo bootstrap — `forlex-ai/forlex.landing-pages`
 
-This folder is the complete source of the new repo. It was scaffolded inside `platform.backend`
-(branch `test`) so it can be reviewed as a PR first, then pushed as a standalone repo.
+> Status (2026-10-01): the repo exists at
+> `https://github.com/forlex-ai/forlex.landing-pages` (`main`, CI `qa` green,
+> branch protection requiring `qa`). This doc stays as the setup record and
+> re-runbook. The old URL `forlex-ai/forlex-landing-pages` 301-redirects here.
+
+This folder was the complete source of the new repo. It was scaffolded inside
+`platform.backend` so it could be reviewed as a PR first, then pushed as a
+standalone repo (done — the new repo is the source of truth; `platform.backend`
+vendors it as submodule `libs/forlex.landing-pages`).
 
 ## Option A — push this folder as the new repo (recommended)
 

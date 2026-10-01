@@ -1,0 +1,49 @@
+name: security
+
+# Zero-dependency repo: no lockfile/SBOM to scan. This workflow guards the
+# remaining supply-chain surface: secrets accidentally committed and the
+# (empty) npm audit surface.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 0 * * 0'
+
+jobs:
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fail on tracked env files
+        run: |
+          if git ls-files | grep -E '(^|/)\.env($|\.)' | grep -v '\.env\.example$'; then
+            echo "Real .env files must never be committed (.env.example only)."
+            exit 1
+          fi
+          echo "No tracked .env files."
+
+      - name: Scan for secret patterns
+        run: |
+          # Real-key shapes only — docs use <phc_...> placeholders which must not match.
+          PATTERN='(ghp_[A-Za-z0-9]{20,}|gho_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|phc_[A-Za-z0-9]{20,}|sk-(live|test)-[A-Za-z0-9]{10,}|xox[bap]-[A-Za-z0-9-]{10,}|BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY|vercel_[A-Za-z0-9]{20,})'
+          if git grep -n -E "$PATTERN" -- ':!security.yml' .; then
+            echo "Secret-shaped string committed. Remove it and rotate the credential."
+            exit 1
+          fi
+          echo "No secret patterns found."
+
+  dependency-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - name: npm audit (empty surface, must stay clean)
+        run: npm audit --audit-level=high

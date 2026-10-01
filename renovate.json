@@ -1,0 +1,12 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "schedule": ["before 6am on monday"],
+  "packageRules": [
+    {
+      "description": "Group GitHub Actions updates (this repo's only dependency surface today).",
+      "groupName": "github actions",
+      "matchManagers": ["github-actions"]
+    }
+  ]
+}

@@ -22,3 +22,49 @@ jobs:
           LP_ROBOTS: noindex
           LP_DISABLE_TRACKING: 'true'
       - run: npm run qa:built
+
+  smoke:
+    runs-on: ubuntu-latest
+    needs: qa
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - run: npm run build
+        env:
+          LP_BASE_URL: https://lp.forlex.ai
+          LP_POSTHOG_HOST: https://b.forlex.ai
+          LP_ROBOTS: noindex
+          LP_DISABLE_TRACKING: 'true'
+      - name: Serve dist and assert LP responses
+        run: |
+          PORT=3100 node scripts/dev.mjs > dev.log 2>&1 &
+          SRV=$!
+          trap 'kill $SRV 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do
+            curl -sf http://127.0.0.1:3100/ > /dev/null && break
+            sleep 1
+          done
+          assert_contains() {
+            local url="$1" needle="$2"
+            local code body
+            code=$(curl -s -o /tmp/smoke_body -w '%{http_code}' "$url")
+            body=$(cat /tmp/smoke_body)
+            if [ "$code" != "200" ]; then
+              echo "FAIL: $url -> HTTP $code (want 200)"; exit 1
+            fi
+            if ! grep -qF "$needle" /tmp/smoke_body; then
+              echo "FAIL: $url missing marker: $needle"; exit 1
+            fi
+            echo "OK: $url -> 200 + marker"
+          }
+          assert_contains http://127.0.0.1:3100/advogados 'Starter grátis pela parceria com a OAB'
+          assert_contains http://127.0.0.1:3100/advogados '/assets/tracking-advogados.js'
+          assert_contains http://127.0.0.1:3100/upgrade-premium '30% off em parceria com a OAB'
+          assert_contains http://127.0.0.1:3100/upgrade-premium '/assets/tracking-upgrade-premium.js'
+          assert_contains http://127.0.0.1:3100/assets/tracking-advogados.js '__forlexLp'
+          code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3100/nope)
+          if [ "$code" != "404" ]; then echo "FAIL: /nope -> HTTP $code (want 404)"; exit 1; fi
+          echo "OK: /nope -> 404"
