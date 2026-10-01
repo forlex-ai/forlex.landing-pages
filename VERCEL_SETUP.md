@@ -9,7 +9,7 @@ Vercel Dashboard → Add New → Project → Import `forlex-ai/forlex-landing-pa
 | Framework Preset | `Other` |
 | Build Command | `npm run build` |
 | Output Directory | `dist` |
-| Install Command | `npm ci` (default) |
+| Install Command | `npm install` (default; repo has zero deps, no lockfile) |
 | Node.js Version | `22.x` |
 | Root Directory | `.` (repo root) |
 

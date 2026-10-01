@@ -13,8 +13,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
-      - run: npm ci
+      # No npm cache / npm ci: this repo has zero dependencies (no lockfile).
+      - run: npm install --no-audit --no-fund
       - run: npm run build
         env:
           LP_BASE_URL: https://lp.forlex.ai
