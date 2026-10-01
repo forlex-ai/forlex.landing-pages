@@ -2,7 +2,7 @@
 
 ## 1. Import the repo
 
-Vercel Dashboard → Add New → Project → Import `forlex-ai/forlex-landing-pages`.
+Vercel Dashboard → Add New → Project → Import `forlex-ai/forlex.landing-pages`.
 
 | Setting | Value |
 | --- | --- |

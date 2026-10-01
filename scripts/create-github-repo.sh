@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Push the landing-pages folder as a standalone repo.
-# Usage: ./scripts/create-github-repo.sh --org forlex-ai --repo forlex-landing-pages [--branch main] [--remote git@github.com:...]
+# Usage: ./scripts/create-github-repo.sh --org forlex-ai --repo forlex.landing-pages [--branch main] [--remote git@github.com:...]
 set -euo pipefail
 
 ORG="forlex-ai"
-REPO="forlex-landing-pages"
+REPO="forlex.landing-pages"
 BRANCH="main"
 REMOTE=""
 

@@ -4,7 +4,7 @@
 
 | Host | Owner (Vercel project) | Purpose |
 | --- | --- | --- |
-| `lp.forlex.ai` | `forlex-landing-pages` (this repo) | Primary LP domain. Meta Ads point here. |
+| `lp.forlex.ai` | `forlex-landing-pages` Vercel project (repo `forlex-ai/forlex.landing-pages`) | Primary LP domain. Meta Ads point here. |
 | `www.forlex.ai/advogados`, `www.forlex.ai/upgrade-premium` | `forlex.site` (rewrites → LP deployment) | ENG-4705 spec URLs. Served via rewrite (URL preserved, no redirect, UTMs intact). |
 | `forlex.ai/*` (apex) | `forlex.site` (301 → `www.forlex.ai`) | Unchanged. |
 
