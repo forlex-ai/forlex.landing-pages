@@ -1,6 +1,6 @@
 # Forlex Landing Pages
 
-Static-first repo for campaign landing pages. Deploys to Vercel as `lp.forlex.ai`.
+Static-first repo for campaign landing pages. Deploys to Vercel as `go.forlex.ai`.
 
 - **Stack:** zero-dependency static HTML + Node build (no framework). Each LP is a self-contained `source.html` (single-file workflow from design/AI) plus a `lp.config.json` with CTAs, UTMs and OG.
 - **Why a separate repo:** campaign LPs iterate faster than `forlex.site`, need isolated deploys/previews, and keep paid-traffic experiments out of the main marketing site deploy queue.
@@ -10,10 +10,10 @@ Static-first repo for campaign landing pages. Deploys to Vercel as `lp.forlex.ai
 
 | LP | LP domain (new) | Marketing URL (ENG-4705 spec, via forlex.site rewrite) |
 | --- | --- | --- |
-| LP A — novos usuários (Starter grátis) | `https://lp.forlex.ai/advogados` | `https://www.forlex.ai/advogados` |
-| LP B — upgrade (Premium 30% off) | `https://lp.forlex.ai/upgrade-premium` | `https://www.forlex.ai/upgrade-premium` |
+| LP A — novos usuários (Starter grátis) | `https://go.forlex.ai/advogados` | `https://www.forlex.ai/advogados` |
+| LP B — upgrade (Premium 30% off) | `https://go.forlex.ai/upgrade-premium` | `https://www.forlex.ai/upgrade-premium` |
 
-Meta Ads should point to the LP domain directly (`lp.forlex.ai/...`). The `forlex.ai/...` URLs keep working via rewrites in `forlex.site` (see `docs/FORLEX_SITE_REWRITES.md`) so the ENG-4705 spec stays valid.
+Meta Ads should point to the LP domain directly (`go.forlex.ai/...`). The `forlex.ai/...` URLs keep working via rewrites in `forlex.site` (see `docs/FORLEX_SITE_REWRITES.md`) so the ENG-4705 spec stays valid.
 
 ## Quickstart
 
@@ -74,7 +74,7 @@ Schema + verification: `docs/ANALYTICS.md`.
 ## Deploy
 
 - Vercel project: framework `Other`, build `npm run build`, output `dist`. See `VERCEL_SETUP.md`.
-- Domain: `lp.forlex.ai` (CNAME to `cname.vercel-dns.com`). See `DOMAIN_SETUP.md`.
+- Domain: `go.forlex.ai` (CNAME to `cname.vercel-dns.com`). See `DOMAIN_SETUP.md`.
 - Env vars (Vercel → Production + Preview): `LP_BASE_URL`, `LP_POSTHOG_KEY`, `LP_POSTHOG_HOST`, `LP_META_PIXEL_ID`, `LP_ROBOTS=noindex`.
 - `forlex.ai/advogados` + `forlex.ai/upgrade-premium` stay live via `forlex.site` rewrites (no redirect, URL preserved, UTMs intact). See `docs/FORLEX_SITE_REWRITES.md`.
 

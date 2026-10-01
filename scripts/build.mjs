@@ -11,7 +11,7 @@
  * Output: dist/<slug>/index.html + dist/assets/tracking-<slug>.js + dist/index.html
  *
  * Env:
- *   LP_BASE_URL (default https://lp.forlex.ai)
+ *   LP_BASE_URL (default https://go.forlex.ai)
  *   LP_POSTHOG_KEY, LP_POSTHOG_HOST (default https://b.forlex.ai)
  *   LP_META_PIXEL_ID
  *   LP_ROBOTS (noindex|index, default from lp.config.json)
@@ -148,7 +148,7 @@ function listSlugs() {
 
 function main() {
   loadDotEnv();
-  const baseUrl = env('LP_BASE_URL', 'https://lp.forlex.ai').replace(/\/+$/, '');
+  const baseUrl = env('LP_BASE_URL', 'https://go.forlex.ai').replace(/\/+$/, '');
   const posthogKey = env('LP_POSTHOG_KEY', '');
   const posthogHost = env('LP_POSTHOG_HOST', 'https://b.forlex.ai').replace(/\/+$/, '');
   const pixelId = env('LP_META_PIXEL_ID', '');

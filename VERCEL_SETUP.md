@@ -1,15 +1,22 @@
 # Vercel setup — `forlex-landing-pages`
 
+> Status (2026-10-01): project exists in team `forlex`
+> (`prj_dvtpAH7SNGJrE6wQxYjtHXctenhR`), first production deploy READY,
+> `go.forlex.ai` staged, protection posture mirrored from `site`
+> (custom domains public, `*.vercel.app` + previews SSO-protected).
+> Remaining: Cloudflare DNS record (see `DOMAIN_SETUP.md`), tracking keys
+> (§2), native Git connection (§7).
+
 ## 1. Import the repo
 
-Vercel Dashboard → Add New → Project → Import `forlex-ai/forlex.landing-pages`.
+Done via API (project created 2026-10-01). For reference, the settings were:
 
 | Setting | Value |
 | --- | --- |
 | Framework Preset | `Other` |
 | Build Command | `npm run build` |
 | Output Directory | `dist` |
-| Install Command | `npm install` (default; repo has zero deps, no lockfile) |
+| Install Command | `npm install` (repo has zero deps, no lockfile) |
 | Node.js Version | `22.x` |
 | Root Directory | `.` (repo root) |
 
@@ -23,7 +30,7 @@ Vercel → Project → Settings → Environment Variables. Set for **Production 
 
 | Name | Value | Notes |
 | --- | --- | --- |
-| `LP_BASE_URL` | `https://lp.forlex.ai` | Preview builds override automatically? No — keep prod URL; canonical/OG always point to prod (intentional). |
+| `LP_BASE_URL` | `https://go.forlex.ai` | Preview builds override automatically? No — keep prod URL; canonical/OG always point to prod (intentional). |
 | `LP_POSTHOG_KEY` | `<phc_...>` | Copy `NUXT_PUBLIC_POSTHOG_KEY` from the `forlex.site` Vercel project. |
 | `LP_POSTHOG_HOST` | `https://b.forlex.ai` | Same reverse proxy as `forlex.site`. |
 | `LP_META_PIXEL_ID` | `<pixel id>` | Meta Events Manager → Data Sources. Empty = Pixel snippet skipped (build warns). |
@@ -35,13 +42,15 @@ Redeploy after changing env vars (they are baked in at build time).
 ## 3. Preview workflow
 
 - Every PR gets a Vercel Preview URL (`https://forlex-landing-pages-<hash>.vercel.app`).
+  Previews are SSO-protected (team login required) — same posture as `forlex.site`.
+  For external QA sharing, use the production custom domain (public).
 - Share `.../advogados` + `.../upgrade-premium` (+ `?static=1` screenshots) on the Linear issue.
 - `npm run qa:built` runs in CI (`.github/workflows/qa.yml`) and must pass before merge.
 
 ## 4. Production
 
-- Merge to `main` → auto-deploy to production (`lp.forlex.ai` once the domain is attached).
-- Verify: `curl -sI https://lp.forlex.ai/advogados | head`, check `200`, `strict-transport-security`,
+- Merge to `main` → auto-deploy to production (`go.forlex.ai` once the domain is attached).
+- Verify: `curl -sI https://go.forlex.ai/advogados | head`, check `200`, `strict-transport-security`,
   no redirect chain (UTMs must survive — rewrites, not redirects, on the `forlex.site` side).
 
 ## 5. Observability
@@ -56,3 +65,14 @@ Redeploy after changing env vars (they are baked in at build time).
 - Vercel → Deployments → Promote a previous production deployment (instant).
 - LP content is versioned per `lp.config.json` (`LP_A_v4.4`, `LP_B_upgrade_v1`) — keep old
   `source.html` in git history; no runtime feature flags needed for v1.
+
+## 7. Native Git integration (pending, 1 click)
+
+Deploys currently run via the temporary `.github/workflows/deploy.yml` bridge
+(push → prod, PR → preview) because the Vercel GitHub App has no access to this
+repo yet. To switch to native Git deploys:
+
+1. Vercel → `forlex-landing-pages` → Settings → Git → Connect Git Repository →
+   select `forlex-ai/forlex.landing-pages` (grants the GitHub App access).
+2. Verify one auto-deploy from a push, then **delete** `deploy.yml` (otherwise
+   native + action double-deploy).

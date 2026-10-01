@@ -1,43 +1,57 @@
-# Domain setup — `lp.forlex.ai`
+# Domain setup — `go.forlex.ai`
 
 ## Decision
 
 | Host | Owner (Vercel project) | Purpose |
 | --- | --- | --- |
-| `lp.forlex.ai` | `forlex-landing-pages` Vercel project (repo `forlex-ai/forlex.landing-pages`) | Primary LP domain. Meta Ads point here. |
+| `go.forlex.ai` | `forlex-landing-pages` Vercel project (repo `forlex-ai/forlex.landing-pages`) | Primary LP domain. Meta Ads point here. |
 | `www.forlex.ai/advogados`, `www.forlex.ai/upgrade-premium` | `forlex.site` (rewrites → LP deployment) | ENG-4705 spec URLs. Served via rewrite (URL preserved, no redirect, UTMs intact). |
 | `forlex.ai/*` (apex) | `forlex.site` (301 → `www.forlex.ai`) | Unchanged. |
 
 Do **not** point `forlex.ai` DNS at the LP project — the apex + `www` stay on `forlex.site`.
-The LP project only owns the `lp` subdomain.
+The LP project only owns the `go` subdomain.
 
-## 1. Add the domain in Vercel
+> Why `go` and not `lp`? `lp.forlex.ai` is taken: it CNAMEs to a Lovable
+> experiment (`huggable-remix-spark.lovable.app`, "Forlex | Sistema para
+> advogados" stub). Migrating it needs the owner's sign-off. `go.forlex.ai`
+> was free, is shorter in ads, and matches the conventional go-link pattern.
+> Revisit only if the Lovable site is retired.
 
-Vercel → `forlex-landing-pages` → Settings → Domains → Add `lp.forlex.ai`.
+## 1. Vercel side (done)
 
-Vercel will show the required DNS record:
+`go.forlex.ai` is added to the `forlex-landing-pages` project (team `forlex`)
+and staged. Vercel issues TLS automatically once DNS points at it.
+
+## 2. DNS — Cloudflare (manual, 2 min)
+
+**Authority: Cloudflare** (`cesar`/`elisabeth.ns.cloudflare.com`) — not Vercel.
+`vercel dns ls forlex.ai` shows an inactive record set; ignore it.
+
+Cloudflare Dashboard → `forlex.ai` zone → DNS → Records → Add:
 
 ```
-Type: CNAME
-Name: lp
-Value: cname.vercel-dns.com.
-TTL: auto
+Type:  CNAME
+Name:  go
+Target: cname.vercel-dns.com
+TTL:   Auto
+Proxy: OFF (DNS-only, grey cloud)
 ```
 
-## 2. DNS (Cloudflare / registrar)
+Use **DNS-only**. If the record is proxied (orange cloud), set SSL mode to
+**Full (strict)** so Vercel can issue/renew the cert — but prefer DNS-only:
+Vercel handles TLS + edge cache, and proxying adds a TLS-terminating hop that
+complicates `strict-transport-security` and client-IP analytics.
 
-Add the `lp` CNAME at the `forlex.ai` zone. If Cloudflare proxies the record (orange cloud),
-set SSL mode to **Full (strict)** so Vercel can issue/renew the cert. Prefer **DNS-only**
-(grey cloud) for `lp` unless you need Cloudflare WAF in front — Vercel handles TLS + edge cache.
-
-Verify:
+Verify (allow ~1 min for propagation):
 
 ```bash
-dig +short lp.forlex.ai
-# expect: cname.vercel-dns.com. -> vercel edge IPs
+# expect: cname.vercel-dns.com.
+nslookup -type=CNAME go.forlex.ai
 
-curl -sI https://lp.forlex.ai/advogados | head -n 20
+curl -sI https://go.forlex.ai/advogados | head -n 20
 # expect: HTTP/2 200, strict-transport-security, no location: header
+# (Vercel deployment protection covers *.vercel.app URLs only;
+# custom domains are public, same posture as forlex.site.)
 ```
 
 ## 3. forlex.site rewrites (spec URLs)
@@ -46,13 +60,13 @@ curl -sI https://lp.forlex.ai/advogados | head -n 20
 `forlex.site` Vercel project, not redirects — the browser URL stays `forlex.ai/...` while
 Vercel serves bytes from the LP deployment. Full snippet + QA in `docs/FORLEX_SITE_REWRITES.md`.
 
-Target origin for the rewrites: `https://lp.forlex.ai` (stable) — not the
-`*.vercel.app` preview host (rotates per deploy).
+Target origin for the rewrites: `https://go.forlex.ai` (stable custom domain) — never the
+`*.vercel.app` hosts (those are SSO-protected, and preview hosts rotate per deploy).
 
 ## 4. Cookies / auth
 
 LPs set no auth cookies. `localStorage` keys (`forlex_journey_id`, `forlex_lp_distinct_id`)
-are per-host, so `lp.forlex.ai` and `www.forlex.ai` do not share them — this is fine:
+are per-host, so `go.forlex.ai` and `www.forlex.ai` do not share them — this is fine:
 the `journey_id` is forwarded as a query param on app handoff only when forlex.site builds
 the URL. LPs preserve UTMs and send their own `journey_id` in PostHog events; the app session
 joins on `utm_*` + `ph_distinct_id` where available. See `docs/ANALYTICS.md`.

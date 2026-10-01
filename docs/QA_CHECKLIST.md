@@ -9,7 +9,7 @@ Automated (`npm run build && npm run qa:built`, also in CI):
 
 Manual (per Preview + Production deploy):
 
-- [ ] `lp.forlex.ai/advogados` opens LP A, `lp.forlex.ai/upgrade-premium` opens LP B (HTTPS, no console errors).
+- [ ] `go.forlex.ai/advogados` opens LP A, `go.forlex.ai/upgrade-premium` opens LP B (HTTPS, no console errors).
 - [ ] `www.forlex.ai/advogados` + `www.forlex.ai/upgrade-premium` serve the same bytes via rewrite
       (URL stays `forlex.ai/...`, no redirect chain — check Network tab, single 200).
 - [ ] Desktop 1440 + mobile 390 vs `source.html` + Figma (incl. iOS Safari + Android Chrome).
@@ -34,4 +34,4 @@ Sign-off:
 
 - [ ] João confirms `robots` (`noindex` keep vs `index`).
 - [ ] João approves OG images (placeholders in `public/og/*.png` until designed art lands).
-- [ ] Preview URLs posted on ENG-4705; campaigns point at `lp.forlex.ai/...` (primary) after sign-off.
+- [ ] Preview URLs posted on ENG-4705; campaigns point at `go.forlex.ai/...` (primary) after sign-off.

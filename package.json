@@ -2,7 +2,7 @@
   "name": "@forlex/landing-pages",
   "version": "1.0.0",
   "private": true,
-  "description": "Forlex landing pages — static-first LP repo deployed to Vercel (lp.forlex.ai). Drop-in HTML workflow for campaign LPs.",
+  "description": "Forlex landing pages — static-first LP repo deployed to Vercel (go.forlex.ai). Drop-in HTML workflow for campaign LPs.",
   "type": "module",
   "engines": {
     "node": ">=20"

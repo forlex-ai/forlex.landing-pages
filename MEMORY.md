@@ -17,11 +17,11 @@ Durable repo memory: why things are the way they are. Update when decisions chan
   dot-convention (`forlex.site`, `forlex.infra`). Hyphenated identifiers stay
   where required: Vercel project `forlex-landing-pages` (dots disallowed), npm
   `@forlex/landing-pages`, PostHog `app: 'forlex-landing-pages'`.
-- **URL strategy (2026-10-01).** Primary LP host `lp.forlex.ai` (this repo's
+- **URL strategy (2026-10-01).** Primary LP host `go.forlex.ai` (this repo's
   Vercel project). ENG-4705 spec URLs (`forlex.ai/advogados`,
   `forlex.ai/upgrade-premium`) served via **rewrites** in `forlex.site`
   (edge-level, URL preserved, UTMs intact) — never redirects. Meta Ads point
-  at `lp.forlex.ai` directly.
+  at `go.forlex.ai` directly.
 - **Tracking without `posthog-js` (2026-10-01).** Lightweight
   `POST <host>/capture/` calls (~8 KB) instead of the full SDK (~100 KB).
   Events: `lp_page_viewed` (+ `$pageview`) and `lp_cta_clicked`. Meta Pixel:
@@ -33,6 +33,16 @@ Durable repo memory: why things are the way they are. Update when decisions chan
   deliberate follow-up, not part of the build.
 - **`robots=noindex` default (2026-10-01).** Both ENG-4705 LPs ship `noindex`
   until João approves indexing. Flip via `LP_ROBOTS` env, not source edits.
+- **Primary host `go.forlex.ai` (2026-10-01).** `lp.forlex.ai` was already
+  taken by a Lovable experiment (CNAME to `*.lovable.app`); `go.*` was free
+  and reads better in ads. DNS authority is **Cloudflare**, not Vercel
+  (`vercel dns ls forlex.ai` shows an inactive set — ignore it). The `go`
+  CNAME (`→ cname.vercel-dns.com`, DNS-only) is the one manual DNS step.
+- **Vercel project provisioned via API (2026-10-01).**
+  `prj_dvtpAH7SNGJrE6wQxYjtHXctenhR`, team `forlex`. Protection posture
+  mirrors `site` (`prod_deployment_urls_and_all_previews`: custom domains
+  public, `*.vercel.app` + previews SSO-gated). Deploys run via the temporary
+  `deploy.yml` bridge until the Vercel GitHub App is granted repo access.
 
 ## Gotchas
 

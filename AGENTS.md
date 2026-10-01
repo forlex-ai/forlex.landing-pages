@@ -13,7 +13,7 @@ Cursor, and future automation.
 - App: static HTML landing pages, no framework. Build is `scripts/build.mjs`
   (`lps/<slug>/source.html` + `lp.config.json` → `dist/`).
 - Hosting: Vercel project `forlex-landing-pages` (team `forlex`), output `dist`,
-  primary domain `lp.forlex.ai`.
+  primary domain `go.forlex.ai`.
 - Observability: PostHog (`lp_page_viewed`, `lp_cta_clicked`) + Meta Pixel
   (`PageView`, `Lead`), injected at build time.
 - Tests: `scripts/qa.mjs` (static + post-build gates) + CI smoke job.

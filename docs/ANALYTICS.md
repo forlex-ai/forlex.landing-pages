@@ -27,7 +27,7 @@ sends lightweight `POST ${LP_POSTHOG_HOST}/capture/` calls plus standard `fbq` c
   "lp_version": "LP_A_v4.4",
   "page_path": "/advogados",
   "page_title": "...",
-  "current_url": "https://lp.forlex.ai/advogados?utm_...",
+  "current_url": "https://go.forlex.ai/advogados?utm_...",
   "referrer_domain": "l.facebook.com",
   "journey_id": "<uuid, shared forlex_journey_id>",
   "utm_source": "meta",

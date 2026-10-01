@@ -14,7 +14,7 @@ vendors it as submodule `libs/forlex.landing-pages`).
 
 ```bash
 # 1. Create the empty GitHub repo (needs repo-create permission in forlex-ai org)
-gh repo create forlex-ai/forlex.landing-pages --public --description "Forlex campaign landing pages (Vercel, lp.forlex.ai)"
+gh repo create forlex-ai/forlex.landing-pages --public --description "Forlex campaign landing pages (Vercel, go.forlex.ai)"
 
 # 2. Extract this folder as the new repo root (keeps history out, clean start)
 cd /tmp
@@ -53,7 +53,7 @@ and marketing should not need the monorepo checkout.
 ## After the repo exists
 
 1. Vercel: import `forlex-ai/forlex.landing-pages` → see `VERCEL_SETUP.md`.
-2. Domain: add `lp.forlex.ai` → see `DOMAIN_SETUP.md`.
+2. Domain: add `go.forlex.ai` → see `DOMAIN_SETUP.md`.
 3. Env vars: `LP_BASE_URL`, `LP_POSTHOG_KEY`, `LP_POSTHOG_HOST`, `LP_META_PIXEL_ID`, `LP_ROBOTS`.
 4. forlex.site rewrites for `forlex.ai/advogados` + `forlex.ai/upgrade-premium` → see `docs/FORLEX_SITE_REWRITES.md`.
 5. Update Linear ENG-4705 with preview + production URLs, request João's sign-off on `robots` + OG.
@@ -64,5 +64,5 @@ and marketing should not need the monorepo checkout.
 - npm package: `@forlex/landing-pages` (scoped names use hyphens; dots are legal in npm but the org convention is `@forlex/<short-name>`).
 - Vercel project: `forlex-landing-pages` (Vercel project names allow hyphens, not dots — independent of the repo name).
 - PostHog `app` property: `forlex-landing-pages` (hyphenated identifier convention, cf. `forlex-site`).
-- Domain: `lp.forlex.ai` (primary). Avoid `go.` (used for shortlinks elsewhere) and bare `forlex.ai/*`
+- Domain: `go.forlex.ai` (primary). Avoid `go.` (used for shortlinks elsewhere) and bare `forlex.ai/*`
   (owned by `forlex.site`; served via rewrites, not DNS).
