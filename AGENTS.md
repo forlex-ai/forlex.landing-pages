@@ -15,7 +15,7 @@ Cursor, and future automation.
 - Hosting: Vercel project `forlex-landing-pages` (team `forlex`), output `dist`,
   primary domain `go.forlex.ai`.
 - Observability: PostHog (`lp_page_viewed`, `lp_cta_clicked`) + Meta Pixel
-  (`PageView`, `Lead`), injected at build time.
+  (`PageView`, `ViewContent`, per-LP intent events), injected at build time.
 - Tests: `scripts/qa.mjs` (static + post-build gates) + CI smoke job.
 
 ## First Reads
@@ -79,9 +79,10 @@ This repo intentionally has **no runtime dependencies and no lockfile**:
   app-CTA click, with `lp_slug`, `cta_block`, `cta_text`, `cta_href`, UTMs,
   and `journey_id` (shared `forlex_journey_id` localStorage key with
   `forlex.site`, ENG-3746 convention).
-- Meta Pixel: `PageView` + `Lead` per CTA click
-  (`content_name: '<slug>:<block>'`). `Lead`, not `Purchase` — conversion
-  completes in the app, which fires its own signup/purchase events.
+- Meta Pixel: `PageView` + `ViewContent` on load, `Lead` for Advogados CTA
+  clicks and `InitiateCheckout` for Premium CTA clicks. `content_name` is
+  `lp_advogados` / `lp_upgrade_premium`; `cta` identifies the position.
+  Completed conversions (`Purchase`, registration) belong in the app.
 - PostHog capture respects `navigator.doNotTrack`. Tracking no-ops cleanly
   when keys are unset (local dev, no console errors).
 

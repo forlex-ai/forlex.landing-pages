@@ -7,8 +7,8 @@ sends lightweight `POST ${LP_POSTHOG_HOST}/capture/` calls plus standard `fbq` c
 
 | Concern | PostHog | Meta Pixel |
 | --- | --- | --- |
-| Page view | `lp_page_viewed` + `$pageview` | `PageView` |
-| CTA click | `lp_cta_clicked` | `Lead` (+ `LpCtaClicked` custom) |
+| Page view | `lp_page_viewed` + `$pageview` | `PageView` + `ViewContent` |
+| CTA click | `lp_cta_clicked` | Advogados: `Lead`; Upgrade Premium: `InitiateCheckout` (+ `LpCtaClicked` custom) |
 | Identity | `forlex_lp_distinct_id` (localStorage) + `forlex_journey_id` (shared key with forlex.site) | `fbq` cookies (`_fbp`) |
 | DNT | skipped when `navigator.doNotTrack=1` (matches forlex.site) | still sent (Meta has no DNT handling; document if legal requires opt-out) |
 | Disabled | `LP_DISABLE_TRACKING=true` or empty key → no-op | empty `LP_META_PIXEL_ID` → snippet skipped |
@@ -56,11 +56,29 @@ falling back to `header` / `footer` / section `id`. Keep `data-figma` attributes
 
 ### Meta Pixel
 
-- `fbq('track', 'PageView')` on load.
-- On CTA click: `fbq('track', 'Lead', { content_name: '<slug>:<block>', content_category: 'lp_cta' })`
-  + `fbq('trackCustom', 'LpCtaClicked', { lp_slug, cta_block, cta_text })`.
-- `Lead` (not `Purchase`/`CompleteRegistration`) because the conversion completes in the app
-  (signup / upgrade), not on the LP. The app fires its own signup/purchase events.
+- On load: `PageView`, then `ViewContent` with `content_name: 'lp_advogados'`
+  or `'lp_upgrade_premium'`.
+- Advogados CTA: `Lead` with `{ content_name: 'lp_advogados', cta: '<position>' }`.
+- Upgrade Premium CTA: `InitiateCheckout` with
+  `{ content_name: 'lp_upgrade_premium', cta: '<position>' }`. This is an intent
+  click, not a paid upgrade; no invented value or currency is sent.
+- Both retain `LpCtaClicked` with `lp_slug`, `cta_block`, `cta_text`, and `cta`.
+- `cta` positions: `header`, `hero`, `funcionalidades`, `comparativo`,
+  `oferta_starter`, `oferta_premium`, `beneficios`, and `final` as applicable.
+  The two offer cards on Advogados are distinguished separately. Explicit
+  `data-meta-cta` wins; otherwise existing block attributes and card headings
+  identify the position. PostHog's existing `cta_block` stays unchanged.
+- Events are dispatched before navigation. Only an unmodified primary click
+  in the same tab waits 200 ms when the configured Meta function is available.
+  Modified clicks, other targets, disabled/unconfigured tracking, and previously
+  canceled clicks retain native navigation. This bounded delay is best-effort,
+  not an acknowledgement from Meta; blocked requests remain blocked.
+- `CompleteRegistration` and `Purchase`/`Subscribe` belong in the app/backend
+  after actual account creation/payment, with real values and deduplication.
+  LPs do not emit these conversion events.
+- Tracking URLs include a content-derived version query to avoid reusing the
+  previous bundle under the long-lived asset cache. Asset paths remain stable
+  for the existing exact-path site rewrites.
 
 ## Verification
 
@@ -70,7 +88,8 @@ falling back to `header` / `footer` / section `id`. Keep `data-figma` attributes
 2. **App session join:** after clicking through, the app PostHog session should show the same
    `utm_*` (query string preserved). `ph_distinct_id` handoff is forlex.site-only; LPs join on UTMs.
 3. **Meta Events Manager → Test Events:** open the Preview URL with the test code, expect
-   `PageView` → `Lead` with `content_name = advogados:Hero`.
+   `PageView` → `ViewContent` → `Lead` for Advogados or `InitiateCheckout`
+   for Premium, with the corresponding `content_name` and CTA position.
 4. **Network tab:** `POST https://b.forlex.ai/capture/` (200, `sendBeacon` or `fetch keepalive`),
    `POST https://www.facebook.com/tr/` (Pixel).
 5. **DNT:** with `navigator.doNotTrack=1`, PostHog calls stop, Pixel continues (documented).

@@ -5,10 +5,11 @@
  *
  * What it does:
  * - Sends `lp_page_viewed` to PostHog (via lightweight capture API, no posthog-js bundle).
- * - Sends `PageView` to Meta Pixel (fbq) when LP_META_PIXEL_ID is configured.
+ * - Sends `PageView` + `ViewContent` to Meta Pixel when configured.
  * - Listens for clicks on app CTAs (a[href*="app.forlex.ai"]) and sends:
  *     - PostHog `lp_cta_clicked` with lp_slug, cta_block, cta_text, cta_href + UTMs
- *     - Meta Pixel `Lead` + `LpCtaClicked` custom event
+ *     - Meta Pixel `Lead` (Advogados) or `InitiateCheckout` (Premium)
+ *       + `LpCtaClicked` custom event
  * - Reuses `forlex_journey_id` from localStorage for site→app attribution
  *   (same key as forlex.site, ENG-3746 convention).
  * - Preserves UTMs: never rewrites hrefs, only reads them.
@@ -237,8 +238,57 @@
     }
   }
 
+  function metaContentName() {
+    return 'lp_' + LP_SLUG.replace(/-/g, '_');
+  }
+
+  function metaCtaPosition(anchor, block) {
+    var explicit = anchor.getAttribute('data-meta-cta');
+    if (explicit) {
+      return explicit;
+    }
+    var name = block.replace(/^\d+\s+/, '').toLowerCase();
+    if (name === 'oferta') {
+      var plan = anchor.closest('.plan');
+      var heading = plan && plan.querySelector('h3');
+      if (heading && /starter/i.test(heading.textContent)) {
+        return 'oferta_starter';
+      }
+      return 'oferta_premium';
+    }
+    var position = name.match(/header|hero|funcionalidades|comparativo|benef|final/);
+    if (position) {
+      return position[0] === 'benef' ? 'beneficios' : position[0];
+    }
+    return name || 'unknown';
+  }
+
+  function deferMetaNavigation(event, anchor, href) {
+    var target = anchor.getAttribute('target');
+    if (TRACKING_DISABLED || !META_PIXEL_ID || META_PIXEL_ID.indexOf('__') === 0 ||
+        typeof window.fbq !== 'function' || !event.cancelable ||
+        event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey ||
+        (target && target.toLowerCase() !== '_self') || anchor.hasAttribute('download')) {
+      return;
+    }
+    // Give queued pixel calls a bounded window without changing the destination.
+    window.setTimeout(function () {
+      anchor.__lpNavigating = false;
+      window.location.assign(href);
+    }, 200);
+    anchor.__lpNavigating = true;
+    event.preventDefault();
+  }
+
   function onCtaClick(event) {
     var anchor = event.currentTarget;
+    if (event.defaultPrevented) {
+      return;
+    }
+    if (anchor && anchor.__lpNavigating) {
+      event.preventDefault();
+      return;
+    }
     if (!anchor || !anchor.href) return;
     var href = anchor.href;
     var block = anchor.getAttribute('data-cta-block') || inferCtaBlock(anchor);
@@ -252,15 +302,19 @@
       cta_utm_campaign: hrefUtms.utm_campaign,
     });
     posthogCapture('lp_cta_clicked', props);
-    fbqTrack('Lead', {
-      content_name: LP_SLUG + ':' + block,
+    var position = metaCtaPosition(anchor, block);
+    fbqTrack(LP_SLUG === 'upgrade-premium' ? 'InitiateCheckout' : 'Lead', {
+      content_name: metaContentName(),
+      cta: position,
       content_category: 'lp_cta',
     });
     fbqTrackCustom('LpCtaClicked', {
       lp_slug: LP_SLUG,
       cta_block: block,
       cta_text: text,
+      cta: position,
     });
+    deferMetaNavigation(event, anchor, href);
   }
 
   function bindCtaTracking() {
@@ -269,7 +323,7 @@
       ctas.forEach(function (a) {
         if (a.__lpTracked) return;
         a.__lpTracked = true;
-        a.addEventListener('click', onCtaClick, { passive: true });
+        a.addEventListener('click', onCtaClick);
       });
     } catch (e) {
       /* best-effort */
@@ -280,6 +334,7 @@
     posthogCapture('lp_page_viewed', baseProps());
     posthogCapture('$pageview', baseProps());
     fbqTrack('PageView');
+    fbqTrack('ViewContent', { content_name: metaContentName() });
   }
 
   if (document.readyState === 'loading') {

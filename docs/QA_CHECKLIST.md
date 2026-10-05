@@ -18,7 +18,8 @@ Manual (per Preview + Production deploy):
 - [ ] LP B: click all 6 CTAs → `app.forlex.ai/login` with `utm_content=lp_b_upgrade` intact.
 - [ ] UTMs visible in the app PostHog session after click-through.
 - [ ] PostHog: `lp_page_viewed` + `lp_cta_clicked` in Live Events (see `ANALYTICS.md`).
-- [ ] Meta Pixel: `PageView` + `Lead` in Events Manager Test Events.
+- [ ] Meta Pixel: `PageView` + `ViewContent` on both LPs; `Lead` on Advogados
+      and `InitiateCheckout` on Premium, with the correct `content_name` and `cta`.
 - [ ] Internal anchors (`#comparativo`, `#oferta`, `#topo`, `#funcionalidades`) work with the fixed header
       (target not hidden under the sticky bar).
 - [ ] `?static=1` shows final state without animation (both LPs); `?brands=0` freezes LP-A headline;
