@@ -15,6 +15,7 @@ jobs:
           node-version: '22'
       # No npm cache / npm ci: this repo has zero dependencies (no lockfile).
       - run: npm install --no-audit --no-fund
+      - run: npm run test:tracking
       - run: npm run build
         env:
           LP_BASE_URL: https://go.forlex.ai

@@ -66,7 +66,8 @@ Full workflow: `CONTRIBUTING.md`.
 ## Tracking
 
 - PostHog: `lp_page_viewed` (+ `$pageview`) and `lp_cta_clicked` with `lp_slug`, `cta_block`, `cta_text`, `cta_href`, UTMs, `journey_id`. Uses `https://b.forlex.ai` proxy host, respects DNT.
-- Meta Pixel: `PageView` + `Lead` on every CTA click (+ `LpCtaClicked` custom event).
+- Meta Pixel: `PageView` + `ViewContent` on load; `Lead` on Advogados CTAs
+  and `InitiateCheckout` on Premium CTAs (+ `LpCtaClicked` custom event).
 - UTMs are never rewritten — clicks land on `app.forlex.ai/login` with the query string intact.
 
 Schema + verification: `docs/ANALYTICS.md`.
