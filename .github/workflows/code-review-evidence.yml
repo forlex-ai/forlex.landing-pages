@@ -1,0 +1,68 @@
+name: Final revision review evidence
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review, closed]
+  pull_request_review:
+    types: [submitted, edited, dismissed]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: PR number in this repository
+        required: true
+        type: number
+      bundle_comment_id:
+        description: Final tool bundle comment ID (0 discovers newest explicit bundle)
+        required: false
+        default: 0
+        type: number
+      stage:
+        description: Requested evidence stage
+        required: true
+        default: prepared
+        type: choice
+        options: [prepared, approved, merged, verified]
+      verification_comment_id:
+        description: Post-merge verification comment ID (0 until supplied)
+        required: false
+        default: 0
+        type: number
+
+permissions:
+  contents: read
+  pull-requests: read
+  checks: read
+  attestations: write
+  id-token: write
+
+concurrency:
+  group: final-review-${{ github.event.pull_request.number || inputs.pr_number }}
+  cancel-in-progress: true
+
+jobs:
+  prepare:
+    name: Prepare final revision evidence
+    if: >-
+      (github.event_name == 'workflow_dispatch' && inputs.stage == 'prepared') ||
+      (github.event_name == 'pull_request' && github.event.action != 'closed')
+    uses: forlex-ai/platform.backend/.github/workflows/_code-review-evidence-policy.yml@5e57b67eef02f5945bb9b3c3194924d5c3a5e969
+    with:
+      pr_number: ${{ inputs.pr_number || github.event.pull_request.number }}
+      bundle_comment_id: ${{ inputs.bundle_comment_id || 0 }}
+      stage: prepared
+      additional_checks: '["qa"]'
+
+  decision:
+    name: Verify Daniel decision on final revision
+    if: >-
+      (github.event_name == 'workflow_dispatch' && inputs.stage != 'prepared') ||
+      github.event_name == 'pull_request_review' ||
+      (github.event_name == 'pull_request' &&
+        (github.event.action != 'closed' || github.event.pull_request.merged))
+    uses: forlex-ai/platform.backend/.github/workflows/_code-review-evidence-policy.yml@5e57b67eef02f5945bb9b3c3194924d5c3a5e969
+    with:
+      pr_number: ${{ inputs.pr_number || github.event.pull_request.number }}
+      bundle_comment_id: ${{ inputs.bundle_comment_id || 0 }}
+      stage: ${{ inputs.stage || (github.event.action == 'closed' && 'merged' || 'approved') }}
+      verification_comment_id: ${{ inputs.verification_comment_id || 0 }}
+      additional_checks: '["qa"]'
