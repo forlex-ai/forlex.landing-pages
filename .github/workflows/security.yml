@@ -5,11 +5,16 @@ name: security
 # (empty) npm audit surface.
 on:
   push:
-    branches: [main]
+    branches: [test, main]
   pull_request:
-    branches: [main]
+    branches: [test, main]
   schedule:
     - cron: '0 0 * * 0'
+
+# Superseded PR runs can stop; accepted test/main sources keep their validation.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   secret-scan:
