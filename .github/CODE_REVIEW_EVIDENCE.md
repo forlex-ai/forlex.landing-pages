@@ -2,7 +2,7 @@
 
 This public repository emits a factual PR request artifact. The private backend
 collects and attests the final tool bundle, CI, Daniel decision, observed merge
-and post-merge verification. Backend policy: `7df698f8cf9ccb07314b371e5fa1fe36116cf2e6`.
+and post-merge verification. Backend policy: `93a9a57a586374c673b5a47806dceb5d50d717f8`.
 
 1. After the last change, publish actual tool reports and findings in a
    `forlex-tool-review` comment binding the final head and current base SHA.
@@ -14,7 +14,7 @@ and post-merge verification. Backend policy: `7df698f8cf9ccb07314b371e5fa1fe3611
 5. Daniel alone merges. Publish actual `forlex-post-merge-verification` evidence
    afterward so the observer can record that stage.
 
-[Private operator runbook](https://github.com/forlex-ai/platform.backend/blob/294710bca4/docs/operations/CODE_REVIEW_EVIDENCE.md)
+[Private operator runbook](https://github.com/forlex-ai/platform.backend/blob/016dd0609f7b7e1d6a8562de4f0d6be2d57f7af7/docs/operations/CODE_REVIEW_EVIDENCE.md)
 [Private backend observer](https://github.com/forlex-ai/platform.backend/actions/workflows/public-repository-review-evidence.yml)
 
 The backend observer is exercised on its implementation PR and polls every 30
