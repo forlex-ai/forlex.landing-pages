@@ -2,8 +2,13 @@ name: qa
 
 on:
   push:
-    branches: [main]
+    branches: [test, main]
   pull_request:
+
+# Superseded PR runs can stop; accepted test/main sources keep their validation.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   qa:
@@ -23,22 +28,6 @@ jobs:
           LP_ROBOTS: noindex
           LP_DISABLE_TRACKING: 'true'
       - run: npm run qa:built
-
-  smoke:
-    runs-on: ubuntu-latest
-    needs: qa
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - run: npm install --no-audit --no-fund
-      - run: npm run build
-        env:
-          LP_BASE_URL: https://go.forlex.ai
-          LP_POSTHOG_HOST: https://b.forlex.ai
-          LP_ROBOTS: noindex
-          LP_DISABLE_TRACKING: 'true'
       - name: Serve dist and assert LP responses
         run: |
           PORT=3100 node scripts/dev.mjs > dev.log 2>&1 &
@@ -69,3 +58,11 @@ jobs:
           code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3100/nope)
           if [ "$code" != "404" ]; then echo "FAIL: /nope -> HTTP $code (want 404)"; exit 1; fi
           echo "OK: /nope -> 404"
+
+  smoke:
+    # Keep the existing check name; qa now proves HTTP behavior for its own build.
+    runs-on: ubuntu-latest
+    needs: qa
+    steps:
+      - name: Confirm validated build smoke
+        run: echo "HTTP smoke assertions passed in qa against its validated dist output."
