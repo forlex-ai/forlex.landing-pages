@@ -20,6 +20,7 @@
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
@@ -188,13 +189,6 @@ function main() {
     let html = readFileSync(sourceFile, 'utf8');
     html = tagCtas(html, slug);
     const trackingFilename = `tracking-${slug}.js`;
-    const trackingSrc = `/assets/${trackingFilename}`;
-    html = injectHead(html, { config, baseUrl, pixelId, trackingSrc, robots });
-
-    const outDir = join(DIST_DIR, slug);
-    mkdirSync(outDir, { recursive: true });
-    writeFileSync(join(outDir, 'index.html'), html, 'utf8');
-
     const trackingJs = buildTrackingJs({
       slug,
       version: config.version || 'v1',
@@ -204,6 +198,14 @@ function main() {
       baseUrl,
       disabled,
     });
+    const trackingVersion = createHash('sha256').update(trackingJs).digest('hex').slice(0, 12);
+    const trackingSrc = `/assets/${trackingFilename}?v=${trackingVersion}`;
+    html = injectHead(html, { config, baseUrl, pixelId, trackingSrc, robots });
+
+    const outDir = join(DIST_DIR, slug);
+    mkdirSync(outDir, { recursive: true });
+    writeFileSync(join(outDir, 'index.html'), html, 'utf8');
+
     writeFileSync(join(DIST_DIR, 'assets', trackingFilename), trackingJs, 'utf8');
 
     const bytes = statSync(join(outDir, 'index.html')).size;

@@ -18,6 +18,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
@@ -165,6 +166,17 @@ function qaOne(slug) {
     for (const [name, re] of checks) {
       if (!re.test(html)) fail(slug, `post-build injection missing: ${name}`);
       else pass(slug, `injected: ${name}`);
+    }
+    const trackingPath = join(ROOT, 'dist', 'assets', `tracking-${slug}.js`);
+    if (!existsSync(trackingPath)) {
+      fail(slug, 'tracking asset missing');
+    } else {
+      const version = createHash('sha256').update(readFileSync(trackingPath)).digest('hex').slice(0, 12);
+      if (!html.includes(`/assets/tracking-${slug}.js?v=${version}`)) {
+        fail(slug, 'tracking URL version does not match the emitted bundle');
+      } else {
+        pass(slug, 'tracking URL version matches bundle content');
+      }
     }
     if (!html.includes('fbq(') && !html.includes('Meta Pixel not configured')) warn(slug, 'Meta Pixel snippet not detected');
     else pass(slug, 'Meta Pixel snippet present (or explicitly skipped)');

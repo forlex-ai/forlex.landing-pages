@@ -15,7 +15,8 @@
     "new-lp": "node scripts/new-lp.mjs",
     "extract-assets": "node scripts/extract-assets.mjs",
     "clean": "rm -rf dist .tmp",
-    "test": "npm run build && npm run qa:built"
+    "test:tracking": "node --test scripts/tracking_test.mjs",
+    "test": "npm run test:tracking && npm run build && npm run qa:built"
   },
   "keywords": [
     "forlex",
