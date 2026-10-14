@@ -30,6 +30,9 @@ EXCEPTION_FIELDS = {
     "proof",
 }
 CHECK_NAME = "TruffleHog secret scan"
+HISTORY_CHECK_NAME = "TruffleHog history scan"
+MERGE_POLL_ATTEMPTS = 5
+MERGE_POLL_INTERVAL = 1
 OUTPUT_LIMIT = 256 * 1024 * 1024
 DIAGNOSTIC_LIMIT = 16 * 1024 * 1024
 POLICY_LIMIT = 1024 * 1024
@@ -200,15 +203,21 @@ def git_range(repo, head, base, *, full_if_nonforward=False):
     if not SHA.fullmatch(head) or (base is not None and not SHA.fullmatch(base)):
         raise SecretScanRefusal("invalid source SHA")
 
-    def git(*args, ancestor_status=False):
+    def git(*args, ancestor_status=False, missing_ok=False):
         result = subprocess.run(
             ["git", "--no-replace-objects", "-C", str(repo), *args],
             capture_output=True,
             text=True,
             timeout=60,
             check=False,
-            env={"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "GIT_NO_LAZY_FETCH": "1", "LANG": "C.UTF-8"},
+            env={
+                "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
+                "GIT_NO_LAZY_FETCH": "1",
+                "LANG": "C.UTF-8",
+            },
         )
+        if missing_ok and result.returncode == 1:
+            return None
         if ancestor_status and result.returncode in {0, 1}:
             return result.returncode == 0
         if result.returncode:
@@ -219,9 +228,14 @@ def git_range(repo, head, base, *, full_if_nonforward=False):
         raise SecretScanRefusal("shallow history refused")
     if git("rev-parse", head + "^{commit}") != head:
         raise SecretScanRefusal("source identity mismatch")
-    if base and git("rev-parse", base + "^{commit}") != base:
-        raise SecretScanRefusal("base identity mismatch")
-    if base and full_if_nonforward:
+    resolved_base = None
+    if base:
+        resolved_base = git("rev-parse", "--verify", "--quiet", base + "^{commit}", missing_ok=full_if_nonforward)
+        if resolved_base is not None and resolved_base != base:
+            raise SecretScanRefusal("base identity mismatch")
+    if base and full_if_nonforward and resolved_base is None:
+        effective = None
+    elif base and full_if_nonforward:
         effective = base if git("merge-base", "--is-ancestor", base, head, ancestor_status=True) else None
     else:
         effective = git("merge-base", base, head) if base else None
@@ -240,7 +254,11 @@ def materialize(repo, commits, directory, deadline, *, include_tags=False, tag_o
     Raises:
         SecretScanRefusal: Missing objects, unsupported modes, or resource bounds.
     """
-    environment = {"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "GIT_NO_LAZY_FETCH": "1", "LANG": "C.UTF-8"}
+    environment = {
+        "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
+        "GIT_NO_LAZY_FETCH": "1",
+        "LANG": "C.UTF-8",
+    }
     command = ["git", "--no-replace-objects", "-C", str(repo)]
 
     def git(*args):
@@ -248,7 +266,11 @@ def materialize(repo, commits, directory, deadline, *, include_tags=False, tag_o
         if remaining <= 0:
             raise SecretScanRefusal("source enumeration timeout")
         result = subprocess.run(
-            command + list(args), capture_output=True, timeout=min(60, remaining), env=environment, check=False
+            command + list(args),
+            capture_output=True,
+            timeout=min(60, remaining),
+            env=environment,
+            check=False,
         )
         if result.returncode or len(result.stdout) > 256 * 1024 * 1024:
             raise SecretScanRefusal("incomplete Git object enumeration")
@@ -341,7 +363,11 @@ def materialize(repo, commits, directory, deadline, *, include_tags=False, tag_o
     total = 0
     with request.open("rb") as stdin, (directory.parent / "git-object-errors").open("wb") as stderr:
         process = subprocess.Popen(
-            command + ["cat-file", "--batch"], stdin=stdin, stdout=subprocess.PIPE, stderr=stderr, env=environment
+            command + ["cat-file", "--batch"],
+            stdin=stdin,
+            stdout=subprocess.PIPE,
+            stderr=stderr,
+            env=environment,
         )
         try:
             for (kind, object_id), (path, _) in objects:
@@ -420,7 +446,12 @@ def run_bounded_scanner(command, environment, output, errors, deadline, *, outpu
         os.chmod(output, 0o600)
         os.chmod(errors, 0o600)
         process = subprocess.Popen(
-            command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=environment, start_new_session=True, bufsize=0
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=environment,
+            start_new_session=True,
+            bufsize=0,
         )
         try:
             with selectors.DefaultSelector() as selector:
@@ -544,7 +575,14 @@ def scan(
     Raises:
         SecretScanRefusal: Invalid or incomplete evidence; scan captures this as an error report.
     """
-    report = {"version": 1, "repository": repository, "head": head, "base": base, "result": "error", "findings": []}
+    report = {
+        "version": 1,
+        "repository": repository,
+        "head": head,
+        "base": base,
+        "result": "error",
+        "findings": [],
+    }
     try:
         if tag_object is not None:
             if (
@@ -605,7 +643,11 @@ def scan(
             )
             report["payload_count"] = len(index)
             command.append(str(payload_directory))
-            environment = {"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "HOME": str(directory), "LANG": "C.UTF-8"}
+            environment = {
+                "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
+                "HOME": str(directory),
+                "LANG": "C.UTF-8",
+            }
             output, errors = directory / "raw.jsonl", directory / "stderr"
             code = run_bounded_scanner(command, environment, output, errors, deadline)
             if code != 0:
@@ -684,7 +726,15 @@ def pr_facts(repository, number, integration_branch):
         SecretScanRefusal: Auxiliary bases or stale/incomplete prospective source.
     """
     try:
-        return _pr_facts(repository, number, integration_branch)
+        # Each API read has a 30-second network timeout; five attempts and four
+        # one-second waits bound both pending computation and stale parent retries.
+        for attempt in range(MERGE_POLL_ATTEMPTS):
+            facts = _pr_facts(repository, number, integration_branch)
+            if facts is not None:
+                return facts
+            if attempt + 1 < MERGE_POLL_ATTEMPTS:
+                time.sleep(MERGE_POLL_INTERVAL)
+        raise SecretScanRefusal("prospective merge readiness was not confirmed")
     except (KeyError, TypeError, ValueError, OSError):
         raise SecretScanRefusal("live PR source binding unavailable") from None
 
@@ -717,13 +767,20 @@ def _pr_facts(repository, number, integration_branch):
     if reference["ref"] != "refs/heads/" + base_ref or reference["object"]["type"] != "commit":
         raise SecretScanRefusal("current base branch identity unavailable")
     head, base, merge = pr["head"]["sha"], reference["object"]["sha"], pr["merge_commit_sha"]
-    if any(not isinstance(value, str) or not SHA.fullmatch(value) for value in (head, base, merge)):
+    if any(not isinstance(value, str) or not SHA.fullmatch(value) for value in (head, base)):
+        raise SecretScanRefusal("current PR source identity unavailable")
+    readiness = pr["mergeable"]
+    if readiness is None:
+        return None
+    if readiness is not True:
+        raise SecretScanRefusal("prospective merge is conflicting or has invalid readiness")
+    if not isinstance(merge, str) or not SHA.fullmatch(merge):
         raise SecretScanRefusal("prospective source identity unavailable")
     if merge in {head, base}:
         raise SecretScanRefusal("prospective merge is not a distinct source object")
     prospective = github(repository, "git/commits/" + merge)
     if prospective["sha"] != merge or [parent["sha"] for parent in prospective["parents"]] != [base, head]:
-        raise SecretScanRefusal("prospective merge parents changed or could not be verified")
+        return None
     return {
         "head": head,
         "base": base,
@@ -734,7 +791,7 @@ def _pr_facts(repository, number, integration_branch):
     }
 
 
-def owned_check(check, target, identity):
+def owned_check(check, target, identity, expected_name=CHECK_NAME):
     """Verify an acknowledged original check before any terminal mutation.
 
     Returns:
@@ -749,14 +806,15 @@ def owned_check(check, target, identity):
         and type(check.get("id")) is int
         and check["id"] == identity
         and check.get("head_sha") == target
-        and check.get("name") == CHECK_NAME
+        and expected_name in {CHECK_NAME, HISTORY_CHECK_NAME}
+        and check.get("name") == expected_name
         and isinstance(check.get("app"), dict)
         and type(check["app"].get("id")) is int
         and check["app"]["id"] == 15368
     )
 
 
-def fail_known_checks(repository, targets):
+def fail_known_checks(repository, targets, expected_name=CHECK_NAME):
     """Best-effort fail each freshly verified original check after a partial error.
 
     Returns:
@@ -771,7 +829,7 @@ def fail_known_checks(repository, targets):
             continue
         try:
             check = github(repository, "check-runs/" + str(identity))
-            if not owned_check(check, target, identity):
+            if not owned_check(check, target, identity, expected_name):
                 confirmed = False
                 continue
             result = github(
@@ -781,11 +839,11 @@ def fail_known_checks(repository, targets):
                 body={
                     "status": "completed",
                     "conclusion": "failure",
-                    "output": {"title": CHECK_NAME, "summary": summary},
+                    "output": {"title": expected_name, "summary": summary},
                 },
             )
             if (
-                not owned_check(result, target, identity)
+                not owned_check(result, target, identity, expected_name)
                 or result.get("status") != "completed"
                 or result.get("conclusion") != "failure"
             ):
@@ -828,6 +886,12 @@ def context(event, kind, repository, pr_number=0, integration_branch="test"):
             if not isinstance(tag_object, str) or not SHA.fullmatch(tag_object) or tag_object == "0" * 40:
                 raise SecretScanRefusal("pushed tag object unavailable")
             base = None
+        elif kind == "push" and event.get("after") == "0" * 40:
+            # GitHub sets GITHUB_SHA to the default head for branch deletion.
+            # Retain the deleted branch tip as the only source and scan it fully.
+            head, base = event.get("before"), None
+            if not isinstance(head, str) or not SHA.fullmatch(head) or head == "0" * 40:
+                raise SecretScanRefusal("deleted branch tip unavailable")
         if base == "0" * 40:
             base = None
     if not SHA.fullmatch(head) or (base is not None and not SHA.fullmatch(base)):
@@ -837,6 +901,7 @@ def context(event, kind, repository, pr_number=0, integration_branch="test"):
         result.update(facts)
     if tag_object is not None:
         result.update({"tag_object": tag_object, "tag_ref": tag_ref})
+    expected_name = CHECK_NAME if number else HISTORY_CHECK_NAME
     targets = []
     try:
         for target, key in [(head, "check_id")] + ([(result["merge"], "merge_check_id")] if number else []):
@@ -844,7 +909,7 @@ def context(event, kind, repository, pr_number=0, integration_branch="test"):
                 repository,
                 "check-runs",
                 method="POST",
-                body={"name": CHECK_NAME, "head_sha": target, "status": "in_progress"},
+                body={"name": expected_name, "head_sha": target, "status": "in_progress"},
             )
             identity = created["id"]
             if type(identity) is not int or identity < 1:
@@ -852,7 +917,7 @@ def context(event, kind, repository, pr_number=0, integration_branch="test"):
             result[key] = identity
             targets.append((target, identity))
     except (KeyError, TypeError, ValueError, OSError):
-        fail_known_checks(repository, targets)
+        fail_known_checks(repository, targets, expected_name)
         raise SecretScanRefusal("check creation was not confirmed; no success was inferred") from None
     return result
 
@@ -867,6 +932,7 @@ def publish(source, report):
         SecretScanRefusal: Unverifiable check identity or completion.
     """
     repository = source["repository"]
+    expected_name = CHECK_NAME if source["pr"] else HISTORY_CHECK_NAME
 
     def unchanged_pr():
         try:
@@ -915,13 +981,15 @@ def publish(source, report):
         success = False
 
     # Verify both original identities before granting either a terminal success.
-    for target, identity in targets:
-        try:
+    # This preflight has the same independent cleanup boundary as terminal writes.
+    try:
+        for target, identity in targets:
             check = github(repository, "check-runs/" + str(identity))
-        except (KeyError, TypeError, ValueError, OSError):
-            raise SecretScanRefusal("check identity verification unavailable") from None
-        if not owned_check(check, target, identity):
-            raise SecretScanRefusal("check identity mismatch")
+            if not owned_check(check, target, identity, expected_name):
+                raise SecretScanRefusal("check identity mismatch")
+    except (KeyError, TypeError, ValueError, OSError):
+        fail_known_checks(repository, targets, expected_name)
+        raise SecretScanRefusal("check identity verification was not confirmed; no success was inferred") from None
     blocked, suppressed, commits = (value if type(value) is int and value >= 0 else "unavailable" for value in counts)
     summary = f"Result: {'pass' if success else 'failure'}. Scanned commits: {commits}. Blocking detections: {blocked}. Exact fixture exceptions: {suppressed}. Raw secrets and verification responses are never published."
     if not current_context:
@@ -929,7 +997,7 @@ def publish(source, report):
     conclusion = "success" if success else "failure"
     results = []
 
-    def complete(target, identity, conclusion, summary):
+    def complete_check(target, identity, conclusion, summary):
         try:
             result = github(
                 repository,
@@ -938,13 +1006,13 @@ def publish(source, report):
                 body={
                     "status": "completed",
                     "conclusion": conclusion,
-                    "output": {"title": CHECK_NAME, "summary": summary},
+                    "output": {"title": expected_name, "summary": summary},
                 },
             )
         except (KeyError, TypeError, ValueError, OSError):
             raise SecretScanRefusal("check completion unavailable") from None
         if (
-            not owned_check(result, target, identity)
+            not owned_check(result, target, identity, expected_name)
             or result.get("status") != "completed"
             or result.get("conclusion") != conclusion
         ):
@@ -958,14 +1026,14 @@ def publish(source, report):
                 conclusion = "failure"
                 summary = "Result: failure. Current PR context changed or could not be verified; a fresh scan is required. Raw secrets and verification responses are never published."
                 for index, (previous_target, previous_id) in enumerate(targets[: len(results)]):
-                    results[index] = complete(previous_target, previous_id, conclusion, summary)
-            results.append(complete(target, identity, conclusion, summary))
+                    results[index] = complete_check(previous_target, previous_id, conclusion, summary)
+            results.append(complete_check(target, identity, conclusion, summary))
         if success and source["pr"] and not unchanged_pr():
             summary = "Result: failure. Current PR context changed or could not be verified; a fresh scan is required. Raw secrets and verification responses are never published."
-            results = [complete(target, identity, "failure", summary) for target, identity in targets]
+            results = [complete_check(target, identity, "failure", summary) for target, identity in targets]
         return results[0]
     except (KeyError, TypeError, ValueError, OSError):
-        fail_known_checks(repository, targets)
+        fail_known_checks(repository, targets, expected_name)
         raise SecretScanRefusal("check completion was not confirmed; no success was inferred") from None
 
 
@@ -1003,7 +1071,11 @@ def main():
             read_policy(args.policy)
         elif args.command == "context":
             result = context(
-                strict_json(args.event.read_text()), args.kind, args.repository, args.pr, args.integration_branch
+                strict_json(args.event.read_text()),
+                args.kind,
+                args.repository,
+                args.pr,
+                args.integration_branch,
             )
             targets = [(result["head"], result["check_id"])]
             if result.get("merge") is not None:
@@ -1017,7 +1089,7 @@ def main():
                     if result.get("tag_object") is not None:
                         stream.write("tag_object=" + result["tag_object"] + "\n")
             except (KeyError, ValueError, OSError, TypeError):
-                fail_known_checks(result["repository"], targets)
+                fail_known_checks(result["repository"], targets, CHECK_NAME if result["pr"] else HISTORY_CHECK_NAME)
                 raise SecretScanRefusal("context persistence was not confirmed; no success was inferred") from None
         elif args.command == "scan":
             source = strict_json(args.context.read_text())

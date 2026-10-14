@@ -84,6 +84,7 @@ def pr_api_fixture(module):
             "head": {"sha": head},
             "base": {"ref": "test", "sha": "d" * 40, "repo": {"full_name": repository}},
             "merge_commit_sha": merge,
+            "mergeable": True,
         },
         "git/ref/heads/test": {"ref": "refs/heads/test", "object": {"type": "commit", "sha": base}},
         "git/commits/" + merge: {"sha": merge, "parents": [{"sha": base}, {"sha": head}]},
@@ -125,13 +126,276 @@ def pr_api_fixture(module):
 class GateTests(unittest.TestCase):
     """Exercise redaction, exception boundaries and scanner failure behavior."""
 
+    def test_publication_preflight_failure_cleans_independently_verified_checks(self):
+        """Initial identity outages and mismatches must not strand the other original check."""
+        for failed_target in ("check-runs/3", "check-runs/4"):
+            for fault in ("once", "outage", "foreign"):
+                with self.subTest(target=failed_target, fault=fault):
+                    module = gate()
+                    event, _responses, checks, calls = pr_api_fixture(module)
+                    source = module.context(event, "pull_request_target", "forlex-ai/unit")
+                    report = {
+                        **source,
+                        "version": 1,
+                        "result": "pass",
+                        "blocked": 0,
+                        "suppressed": 0,
+                        "commit_count": 3,
+                        "candidate_policy_validated": True,
+                        "candidate_policy_source": source["merge"],
+                        "candidate_policy_blob": "f" * 40,
+                    }
+                    api = module.github
+                    failed = False
+                    if fault == "foreign":
+                        checks[failed_target]["app"]["id"] = 46505
+
+                    def failing(
+                        repo,
+                        suffix,
+                        *,
+                        method="GET",
+                        body=None,
+                        failed_target=failed_target,
+                        fault=fault,
+                        api=api,
+                        calls=calls,
+                        module=module,
+                    ):
+                        nonlocal failed
+                        if (
+                            method == "GET"
+                            and suffix == failed_target
+                            and fault != "foreign"
+                            and (not failed or fault == "outage")
+                        ):
+                            failed = True
+                            calls.append((method, suffix, body))
+                            raise module.SecretScanRefusal("private-preflight-response-marker")
+                        return api(repo, suffix, method=method, body=body)
+
+                    module.github = failing
+                    with self.assertRaises(ValueError) as refused:
+                        module.publish(source, report)
+                    self.assertNotIn("private-preflight-response-marker", str(refused.exception))
+                    other = "check-runs/4" if failed_target == "check-runs/3" else "check-runs/3"
+                    self.assertEqual(checks[other]["status"], "completed")
+                    self.assertEqual(checks[other]["conclusion"], "failure")
+                    patches = [(suffix, body) for method, suffix, body in calls if method == "PATCH"]
+                    self.assertTrue(all(body["conclusion"] == "failure" for _, body in patches))
+                    if fault == "once":
+                        self.assertEqual(checks[failed_target]["conclusion"], "failure")
+                    else:
+                        self.assertFalse(any(suffix == failed_target for suffix, _ in patches))
+                    for index, (method, suffix, _) in enumerate(calls):
+                        if method == "PATCH":
+                            self.assertEqual(calls[index - 1], ("GET", suffix, None))
+
+    def test_history_checks_have_a_distinct_fixed_name_from_pr_admission(self):
+        """A push or complete-history success cannot satisfy the fixed PR gate name."""
+        for kind, number in (
+            ("push", 0),
+            ("schedule", 0),
+            ("workflow_dispatch", 0),
+            ("workflow_dispatch", 1),
+            ("pull_request_target", 0),
+        ):
+            with self.subTest(kind=kind, number=number):
+                module = gate()
+                event, _responses, checks, calls = pr_api_fixture(module)
+                event["before"] = "b" * 40
+                with patch.dict(os.environ, {"GITHUB_SHA": "a" * 40}):
+                    source = module.context(event, kind, "forlex-ai/unit", number)
+                expected = "TruffleHog secret scan" if source["pr"] else "TruffleHog history scan"
+                self.assertEqual({check["name"] for check in checks.values()}, {expected})
+                report = {
+                    **source,
+                    "version": 1,
+                    "result": "pass",
+                    "blocked": 0,
+                    "suppressed": 0,
+                    "commit_count": 3,
+                }
+                if source["pr"]:
+                    report.update(
+                        candidate_policy_validated=True,
+                        candidate_policy_source=source["merge"],
+                        candidate_policy_blob="f" * 40,
+                    )
+                self.assertEqual(module.publish(source, report)["conclusion"], "success")
+                self.assertEqual(
+                    {body["output"]["title"] for method, _, body in calls if method == "PATCH"}, {expected}
+                )
+
+    def test_publication_and_cleanup_reject_checks_from_the_other_scan_mode(self):
+        """Name separation remains exact during preflight, terminal writes and cleanup."""
+        for kind in ("push", "pull_request_target"):
+            with self.subTest(kind=kind):
+                module = gate()
+                event, _responses, checks, calls = pr_api_fixture(module)
+                event["before"] = "b" * 40
+                with patch.dict(os.environ, {"GITHUB_SHA": "a" * 40}):
+                    source = module.context(event, kind, "forlex-ai/unit")
+                wrong = "TruffleHog secret scan" if kind == "push" else "TruffleHog history scan"
+                for check in checks.values():
+                    check["name"] = wrong
+                with self.assertRaises(ValueError):
+                    module.publish(source, {"result": "error"})
+                self.assertFalse(any(method == "PATCH" for method, _, _ in calls))
+
+    def test_branch_deletion_scans_retained_before_tip_instead_of_default_sha(self):
+        """Deleted branches bind a full scan to the retained deleted tip, never the default head."""
+        module = gate()
+        event, _responses, checks, _calls = pr_api_fixture(module)
+        event.update(ref="refs/heads/deleted", before="b" * 40, after="0" * 40, deleted=True)
+        with patch.dict(os.environ, {"GITHUB_SHA": "a" * 40}):
+            source = module.context(event, "push", "forlex-ai/unit")
+        self.assertEqual((source["head"], source["base"]), ("b" * 40, None))
+        self.assertEqual([check["head_sha"] for check in checks.values()], ["b" * 40])
+        self.assertEqual([check["name"] for check in checks.values()], ["TruffleHog history scan"])
+
+    def test_branch_deletion_without_a_valid_retained_tip_creates_no_check(self):
+        """Missing, zero and malformed deleted tips refuse before any default-head check exists."""
+        for before in (None, "0" * 40, "B" * 40, "b" * 39):
+            with self.subTest(before=before):
+                module = gate()
+                event, _responses, _checks, calls = pr_api_fixture(module)
+                event.update(ref="refs/heads/deleted", after="0" * 40, deleted=True)
+                if before is not None:
+                    event["before"] = before
+                with patch.dict(os.environ, {"GITHUB_SHA": "a" * 40}), self.assertRaises(ValueError):
+                    module.context(event, "push", "forlex-ai/unit")
+                self.assertFalse(any(method == "POST" for method, _, _ in calls))
+
+    def test_missing_old_push_tip_scans_all_reachable_new_history_but_pr_is_strict(self):
+        """An orphaned force-push source is complete without the old tip; PR scope remains exact."""
+        module = gate()
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Path(directory)
+            subprocess.run(["git", "init", "-q", str(repo)], check=True)
+            for message in ("first", "second"):
+                subprocess.run(
+                    [
+                        "git",
+                        "-C",
+                        str(repo),
+                        "-c",
+                        "user.name=Unit",
+                        "-c",
+                        "user.email=unit@example.invalid",
+                        "commit",
+                        "--allow-empty",
+                        "-qm",
+                        message,
+                    ],
+                    check=True,
+                )
+            head = subprocess.check_output(["git", "-C", str(repo), "rev-parse", "HEAD"], text=True).strip()
+            expected = subprocess.check_output(["git", "-C", str(repo), "rev-list", "HEAD"], text=True).splitlines()
+            self.assertEqual(module.git_range(repo, head, "f" * 40, full_if_nonforward=True), (None, expected))
+            with self.assertRaises(ValueError):
+                module.git_range(repo, head, "f" * 40)
+            with self.assertRaises(ValueError):
+                module.git_range(repo, "e" * 40, "f" * 40, full_if_nonforward=True)
+
+    def test_pending_mergeability_is_polled_before_creating_either_check(self):
+        """GitHub's asynchronous null mergeability is retried using authenticated current facts."""
+        module = gate()
+        event, _responses, checks, _calls = pr_api_fixture(module)
+        api = module.github
+        reads = 0
+
+        def pending(repo, suffix, *, method="GET", body=None):
+            nonlocal reads
+            result = api(repo, suffix, method=method, body=body)
+            if method == "GET" and suffix == "pulls/1":
+                reads += 1
+                if reads < 3:
+                    return {**result, "mergeable": None, "merge_commit_sha": None}
+            if method == "POST":
+                self.assertGreaterEqual(reads, 3)
+            return result
+
+        module.github = pending
+        with patch.object(module.time, "sleep"):
+            source = module.context(event, "pull_request_target", "forlex-ai/unit")
+        self.assertEqual(reads, 3)
+        self.assertEqual((source["head"], source["base"], source["merge"]), ("a" * 40, "b" * 40, "c" * 40))
+        self.assertEqual(len(checks), 2)
+
+    def test_polling_waits_for_exact_current_prospective_merge_parents(self):
+        """A stale merge object cannot authorize checks even after mergeability becomes true."""
+        module = gate()
+        event, _responses, checks, _calls = pr_api_fixture(module)
+        api = module.github
+        reads = 0
+
+        def stale_merge(repo, suffix, *, method="GET", body=None):
+            nonlocal reads
+            result = api(repo, suffix, method=method, body=body)
+            if suffix == "git/commits/" + "c" * 40:
+                reads += 1
+                if reads < 2:
+                    return {**result, "parents": [{"sha": "d" * 40}, {"sha": "a" * 40}]}
+            if method == "POST":
+                self.assertGreaterEqual(reads, 2)
+            return result
+
+        module.github = stale_merge
+        with patch.object(module.time, "sleep"):
+            source = module.context(event, "pull_request_target", "forlex-ai/unit")
+        self.assertEqual(source["base"], "b" * 40)
+        self.assertEqual(reads, 2)
+        self.assertEqual(len(checks), 2)
+
+    def test_unready_or_conflicting_merge_polling_is_bounded_and_creates_no_checks(self):
+        """Pending, conflicting and malformed readiness cannot become premature admission."""
+        for readiness in (None, False, "true", 1):
+            with self.subTest(readiness=readiness):
+                module = gate()
+                event, responses, _checks, calls = pr_api_fixture(module)
+                responses["pulls/1"]["mergeable"] = readiness
+                with patch.object(module.time, "sleep"), self.assertRaises(ValueError):
+                    module.context(event, "pull_request_target", "forlex-ai/unit")
+                reads = sum(method == "GET" and suffix == "pulls/1" for method, suffix, _ in calls)
+                self.assertGreaterEqual(reads, 1)
+                self.assertLessEqual(reads, 5)
+                if readiness is None:
+                    self.assertGreater(reads, 1)
+                self.assertFalse(any(method == "POST" for method, _, _ in calls))
+
+    def test_head_changing_during_merge_polling_refuses_the_stale_event(self):
+        """A ready prospective merge for a newer head cannot reuse an older PR event."""
+        module = gate()
+        event, _responses, _checks, calls = pr_api_fixture(module)
+        api = module.github
+        reads = 0
+
+        def moving(repo, suffix, *, method="GET", body=None):
+            nonlocal reads
+            result = api(repo, suffix, method=method, body=body)
+            if suffix == "pulls/1":
+                reads += 1
+                if reads == 1:
+                    return {**result, "mergeable": None, "merge_commit_sha": None}
+                return {**result, "head": {"sha": "e" * 40}}
+            if suffix == "git/commits/" + "c" * 40:
+                return {**result, "parents": [{"sha": "b" * 40}, {"sha": "e" * 40}]}
+            return result
+
+        module.github = moving
+        with patch.object(module.time, "sleep"), self.assertRaises(ValueError):
+            module.context(event, "pull_request_target", "forlex-ai/unit")
+        self.assertGreater(reads, 1)
+        self.assertFalse(any(method == "POST" for method, _, _ in calls))
+
     def test_context_cli_persistence_errors_fail_all_acknowledged_owned_checks(self):
         """Local context/output write or close failures cannot strand created checks."""
         for kind in ("pull_request_target", "push"):
             for fault in ("context", "github_output", "missing_output", "stream_write", "stream_close"):
                 with self.subTest(kind=kind, fault=fault):
                     module = gate()
-                    event, responses, checks, calls = pr_api_fixture(module)
+                    event, _responses, checks, calls = pr_api_fixture(module)
                     event["before"] = "b" * 40
                     with tempfile.TemporaryDirectory() as directory:
                         root = Path(directory)
@@ -155,13 +419,13 @@ class GateTests(unittest.TestCase):
                         ]
 
                         class FailingOutput(io.StringIO):
-                            def write(self, value):
+                            def write(self, value, fault=fault):
                                 super().write(value)
                                 if fault == "stream_write":
                                     raise OSError("private-context-write-marker")
                                 return len(value)
 
-                            def __exit__(self, *args):
+                            def __exit__(self, *args, fault=fault):
                                 if fault == "stream_close":
                                     raise OSError("private-context-write-marker")
                                 return super().__exit__(*args)
@@ -200,10 +464,21 @@ class GateTests(unittest.TestCase):
         """The CLI guard uses verified cleanup without letting one target block another."""
         for fault in ("foreign", "unavailable"):
             module = gate()
-            event, responses, checks, calls = pr_api_fixture(module)
+            event, _responses, checks, calls = pr_api_fixture(module)
             api = module.github
 
-            def failed_read(repo, suffix, *, method="GET", body=None):
+            def failed_read(
+                repo,
+                suffix,
+                *,
+                method="GET",
+                body=None,
+                api=api,
+                calls=calls,
+                checks=checks,
+                fault=fault,
+                module=module,
+            ):
                 if method == "GET" and suffix == "check-runs/3":
                     if fault == "foreign":
                         checks[suffix]["app"]["id"] = 46505
@@ -247,11 +522,21 @@ class GateTests(unittest.TestCase):
         """An unacknowledged second POST cannot strand the acknowledged owned head."""
         for lost_ack in (False, True):
             module = gate()
-            event, responses, checks, calls = pr_api_fixture(module)
+            event, _responses, checks, calls = pr_api_fixture(module)
             api = module.github
             posts = 0
 
-            def failing(repo, suffix, *, method="GET", body=None):
+            def failing(
+                repo,
+                suffix,
+                *,
+                method="GET",
+                body=None,
+                api=api,
+                calls=calls,
+                lost_ack=lost_ack,
+                module=module,
+            ):
                 nonlocal posts
                 if method == "POST":
                     posts += 1
@@ -300,11 +585,22 @@ class GateTests(unittest.TestCase):
         """Cleanup requires a fresh exact identity and never guesses an unknown POST id."""
         for changed in ("id", "head", "name", "app", "read_outage"):
             module = gate()
-            event, responses, checks, calls = pr_api_fixture(module)
+            event, _responses, checks, calls = pr_api_fixture(module)
             api = module.github
             posts = 0
 
-            def failing(repo, suffix, *, method="GET", body=None):
+            def failing(
+                repo,
+                suffix,
+                *,
+                method="GET",
+                body=None,
+                api=api,
+                calls=calls,
+                changed=changed,
+                checks=checks,
+                module=module,
+            ):
                 nonlocal posts
                 if method == "POST":
                     posts += 1
@@ -336,10 +632,10 @@ class GateTests(unittest.TestCase):
         """Only an acknowledged positive integer id identifies a created original check."""
         for identity in (True, 3.0, "3", None, 0, -1):
             module = gate()
-            event, responses, checks, calls = pr_api_fixture(module)
+            event, _responses, _checks, calls = pr_api_fixture(module)
             api = module.github
 
-            def invalid(repo, suffix, *, method="GET", body=None):
+            def invalid(repo, suffix, *, method="GET", body=None, api=api, identity=identity):
                 result = api(repo, suffix, method=method, body=body)
                 return {**result, "id": identity} if method == "POST" else result
 
@@ -353,7 +649,7 @@ class GateTests(unittest.TestCase):
         for failed_target in ("check-runs/3", "check-runs/4"):
             for lost_ack in (False, True):
                 module = gate()
-                event, responses, checks, calls = pr_api_fixture(module)
+                event, _responses, checks, calls = pr_api_fixture(module)
                 source = module.context(event, "pull_request_target", "forlex-ai/unit")
                 report = {
                     **source,
@@ -368,7 +664,18 @@ class GateTests(unittest.TestCase):
                 }
                 api = module.github
 
-                def failing(repo, suffix, *, method="GET", body=None):
+                def failing(
+                    repo,
+                    suffix,
+                    *,
+                    method="GET",
+                    body=None,
+                    api=api,
+                    calls=calls,
+                    failed_target=failed_target,
+                    lost_ack=lost_ack,
+                    module=module,
+                ):
                     if method == "PATCH" and suffix == failed_target and body["conclusion"] == "success":
                         if lost_ack:
                             api(repo, suffix, method=method, body=body)
@@ -396,7 +703,7 @@ class GateTests(unittest.TestCase):
         for failed_target in ("check-runs/3", "check-runs/4"):
             for fault in ("read", "write", "lost_ack", "unconfirmed", "foreign"):
                 module = gate()
-                event, responses, checks, calls = pr_api_fixture(module)
+                event, _responses, checks, calls = pr_api_fixture(module)
                 source = module.context(event, "pull_request_target", "forlex-ai/unit")
                 report = {
                     **source,
@@ -412,7 +719,19 @@ class GateTests(unittest.TestCase):
                 api = module.github
                 cleaning = False
 
-                def failing(repo, suffix, *, method="GET", body=None):
+                def failing(
+                    repo,
+                    suffix,
+                    *,
+                    method="GET",
+                    body=None,
+                    api=api,
+                    calls=calls,
+                    checks=checks,
+                    failed_target=failed_target,
+                    fault=fault,
+                    module=module,
+                ):
                     nonlocal cleaning
                     if method == "PATCH" and suffix == "check-runs/4" and body["conclusion"] == "success":
                         calls.append((method, suffix, body))
@@ -455,7 +774,7 @@ class GateTests(unittest.TestCase):
     def test_pr_context_uses_current_base_ref_and_binds_both_evaluated_commits(self):
         """A cached Pulls API base cannot select obsolete qualification history."""
         module = gate()
-        event, responses, checks, calls = pr_api_fixture(module)
+        event, _responses, checks, calls = pr_api_fixture(module)
         source = module.context(event, "pull_request_target", "forlex-ai/unit")
         self.assertEqual(source["base"], "b" * 40)
         self.assertEqual(source["base_ref"], "test")
@@ -488,9 +807,12 @@ class GateTests(unittest.TestCase):
     def test_context_cli_outputs_merge_and_accepts_manifest_integration_branch(self):
         """The owning manifest branch can replace the common test default explicitly."""
         module = gate()
-        event, responses, checks, calls = pr_api_fixture(module)
+        event, responses, _checks, _calls = pr_api_fixture(module)
         responses["pulls/1"]["base"]["ref"] = "release"
-        responses["git/ref/heads/release"] = {**responses.pop("git/ref/heads/test"), "ref": "refs/heads/release"}
+        responses["git/ref/heads/release"] = {
+            **responses.pop("git/ref/heads/test"),
+            "ref": "refs/heads/release",
+        }
         event["pull_request"]["base"]["ref"] = "release"
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -550,10 +872,10 @@ class GateTests(unittest.TestCase):
             self.assertEqual([c["conclusion"] for c in checks.values()], [expected, expected])
             self.assertEqual([s for method, s, _ in calls if method == "PATCH"], ["check-runs/3", "check-runs/4"])
 
-    def test_foreign_prospective_check_never_patches_either_target(self):
-        """A correct head check cannot authorize completion of a foreign merge check."""
+    def test_foreign_prospective_check_refuses_success_and_fails_only_verified_head(self):
+        """A foreign merge check remains untouched while the verified original head fails safely."""
         module = gate()
-        event, responses, checks, calls = pr_api_fixture(module)
+        event, _responses, checks, calls = pr_api_fixture(module)
         source = module.context(event, "pull_request_target", "forlex-ai/unit")
         checks["check-runs/4"]["app"]["id"] = 46505
         report = {
@@ -569,12 +891,17 @@ class GateTests(unittest.TestCase):
         }
         with self.assertRaises(ValueError):
             module.publish(source, report)
-        self.assertFalse(any(method == "PATCH" for method, _, _ in calls))
+        self.assertEqual(
+            [(suffix, body["conclusion"]) for method, suffix, body in calls if method == "PATCH"],
+            [("check-runs/3", "failure")],
+        )
+        self.assertEqual(checks["check-runs/3"]["status"], "completed")
+        self.assertEqual(checks["check-runs/4"]["status"], "in_progress")
 
     def test_base_moving_between_dual_writes_downgrades_both_original_checks(self):
         """A successful first write cannot remain qualified after live source changes."""
         module = gate()
-        event, responses, checks, calls = pr_api_fixture(module)
+        event, responses, checks, _calls = pr_api_fixture(module)
         source = module.context(event, "pull_request_target", "forlex-ai/unit")
         api = module.github
 
@@ -659,7 +986,16 @@ class GateTests(unittest.TestCase):
 
             def git(*args):
                 return subprocess.check_output(
-                    ["git", "-C", str(repo), "-c", "user.name=Unit", "-c", "user.email=unit@example.invalid", *args],
+                    [
+                        "git",
+                        "-C",
+                        str(repo),
+                        "-c",
+                        "user.name=Unit",
+                        "-c",
+                        "user.email=unit@example.invalid",
+                        *args,
+                    ],
                     text=True,
                     stderr=subprocess.DEVNULL,
                 ).strip()
@@ -722,7 +1058,13 @@ class GateTests(unittest.TestCase):
             self.assertEqual(json.loads(output.read_text())["result"], "error")
             context.write_text(
                 json.dumps(
-                    {"repository": "forlex-ai/unit", "pr": None, "head": ancestor, "base": None, "kind": "schedule"}
+                    {
+                        "repository": "forlex-ai/unit",
+                        "pr": None,
+                        "head": ancestor,
+                        "base": None,
+                        "kind": "schedule",
+                    }
                 )
             )
             with patch.object(sys, "argv", command):
@@ -878,7 +1220,9 @@ class GateTests(unittest.TestCase):
 
             before = commit("old history")
             subprocess.run(
-                ["git", "-C", str(repo), "checkout", "--orphan", "replacement"], check=True, capture_output=True
+                ["git", "-C", str(repo), "checkout", "--orphan", "replacement"],
+                check=True,
+                capture_output=True,
             )
             first = commit("new root")
             head = commit("new tip")
@@ -940,7 +1284,8 @@ class GateTests(unittest.TestCase):
         result = gate().classify(row, [], "forlex-ai/unit")
         self.assertNotIn(raw, json.dumps(result))
         self.assertEqual(
-            result["path_digest"], hashlib.sha256(row["SourceMetadata"]["Data"]["Git"]["file"].encode()).hexdigest()
+            result["path_digest"],
+            hashlib.sha256(row["SourceMetadata"]["Data"]["Git"]["file"].encode()).hexdigest(),
         )
 
     def test_missing_or_invalid_finding_fields_fail_closed(self):
@@ -1164,7 +1509,12 @@ class GateTests(unittest.TestCase):
             calls.append((method, suffix))
             if suffix.startswith("pulls/"):
                 return {"state": "open", "head": {"sha": "c" * 40}, "base": {"sha": source["base"]}}
-            return {"id": 3, "head_sha": source["head"], "name": "TruffleHog secret scan", "app": {"id": 46505}}
+            return {
+                "id": 3,
+                "head_sha": source["head"],
+                "name": "TruffleHog secret scan",
+                "app": {"id": 46505},
+            }
 
         module.github = api
         with self.assertRaises(ValueError):
@@ -1191,7 +1541,14 @@ class GateTests(unittest.TestCase):
                 calls = []
 
                 def api(
-                    repository, suffix, *, method="GET", body=None, calls=calls, mismatched=mismatched, module=module
+                    repository,
+                    suffix,
+                    *,
+                    method="GET",
+                    body=None,
+                    calls=calls,
+                    mismatched=mismatched,
+                    module=module,
                 ):
                     calls.append((method, suffix))
                     if suffix.startswith("pulls/"):
@@ -1212,7 +1569,12 @@ class GateTests(unittest.TestCase):
             with self.subTest(changed=changed):
                 module = gate()
                 calls = []
-                owned = {"id": 3, "head_sha": source["head"], "name": "TruffleHog secret scan", "app": {"id": 15368}}
+                owned = {
+                    "id": 3,
+                    "head_sha": source["head"],
+                    "name": "TruffleHog secret scan",
+                    "app": {"id": 15368},
+                }
 
                 def api(
                     repository,
@@ -1264,7 +1626,12 @@ class GateTests(unittest.TestCase):
                         raise module.SecretScanRefusal(secret)
                     if failed == "check-read" or method == "PATCH":
                         raise module.SecretScanRefusal(secret)
-                    return {"id": 3, "head_sha": source["head"], "name": "TruffleHog secret scan", "app": {"id": 15368}}
+                    return {
+                        "id": 3,
+                        "head_sha": source["head"],
+                        "name": "TruffleHog secret scan",
+                        "app": {"id": 15368},
+                    }
 
                 module.github = api
                 with self.assertRaises(module.SecretScanRefusal) as refusal:
@@ -1273,7 +1640,7 @@ class GateTests(unittest.TestCase):
                 patches = [body for method, _, body in calls if method == "PATCH"]
                 self.assertEqual(len(patches), 2 if failed == "patch" else 0)
                 self.assertTrue(all(body["conclusion"] == "failure" for body in patches))
-                for index, (method, suffix, body) in enumerate(calls):
+                for index, (method, suffix, _body) in enumerate(calls):
                     if method == "PATCH":
                         self.assertEqual(calls[index - 1], ("GET", suffix, None))
 
@@ -1281,7 +1648,7 @@ class GateTests(unittest.TestCase):
         """Never infer successful completion from an incomplete or contradictory API response."""
         source = {"repository": "forlex-ai/unit", "pr": None, "head": "a" * 40, "base": None, "check_id": 3}
         report = {**source, "version": 1, "result": "pass", "blocked": 0, "suppressed": 0, "commit_count": 2}
-        owned = {"id": 3, "head_sha": source["head"], "name": "TruffleHog secret scan", "app": {"id": 15368}}
+        owned = {"id": 3, "head_sha": source["head"], "name": "TruffleHog history scan", "app": {"id": 15368}}
         for response in (
             {**owned, "status": "completed", "conclusion": "success", "id": 4},
             {**owned, "status": "in_progress", "conclusion": "success"},
@@ -1303,7 +1670,7 @@ class GateTests(unittest.TestCase):
         module = gate()
         secret = "sensitive-report-count"
         source = {"repository": "forlex-ai/unit", "pr": None, "head": "a" * 40, "base": None, "check_id": 3}
-        owned = {"id": 3, "head_sha": source["head"], "name": "TruffleHog secret scan", "app": {"id": 15368}}
+        owned = {"id": 3, "head_sha": source["head"], "name": "TruffleHog history scan", "app": {"id": 15368}}
         module.github = lambda *args, method="GET", body=None: {**owned, **body} if method == "PATCH" else owned
         result = module.publish(
             source, {"result": "error", "blocked": secret, "suppressed": secret, "commit_count": secret}
@@ -1317,7 +1684,12 @@ class GateTests(unittest.TestCase):
         source = {"repository": "forlex-ai/unit", "pr": None, "head": "a" * 40, "base": None, "check_id": 3}
 
         def api(repository, suffix, *, method="GET", body=None):
-            owned = {"id": 3, "head_sha": source["head"], "name": "TruffleHog secret scan", "app": {"id": 15368}}
+            owned = {
+                "id": 3,
+                "head_sha": source["head"],
+                "name": "TruffleHog history scan",
+                "app": {"id": 15368},
+            }
             if method == "PATCH":
                 return {**owned, **body}
             return owned
@@ -1366,7 +1738,11 @@ class GateTests(unittest.TestCase):
                     def api(repository, suffix, *, method="GET", body=None, calls=calls):
                         calls.append((method, suffix, body))
                         if suffix.startswith("pulls/"):
-                            return {"state": "open", "head": {"sha": source["head"]}, "base": {"sha": source["base"]}}
+                            return {
+                                "state": "open",
+                                "head": {"sha": source["head"]},
+                                "base": {"sha": source["base"]},
+                            }
                         return {**owned, **body} if method == "PATCH" else owned
 
                     module.github = api
@@ -1450,7 +1826,11 @@ class GateTests(unittest.TestCase):
             gha_output = root / "gha-output"
             event.write_text(
                 json.dumps(
-                    {"repository": {"full_name": "forlex-ai/unit"}, "ref": "refs/tags/release", "after": "c" * 40}
+                    {
+                        "repository": {"full_name": "forlex-ai/unit"},
+                        "ref": "refs/tags/release",
+                        "after": "c" * 40,
+                    }
                 )
             )
             argv = [
@@ -1495,7 +1875,7 @@ class GateTests(unittest.TestCase):
             "suppressed": 0,
             "commit_count": 2,
         }
-        owned = {"id": 3, "head_sha": source["head"], "name": "TruffleHog secret scan", "app": {"id": 15368}}
+        owned = {"id": 3, "head_sha": source["head"], "name": "TruffleHog history scan", "app": {"id": 15368}}
         module.github = lambda *args, method="GET", body=None: {**owned, **body} if method == "PATCH" else owned
         self.assertEqual(module.publish(source, report)["conclusion"], "failure")
         qualified = {
@@ -1540,6 +1920,44 @@ class NativeScannerTests(unittest.TestCase):
         rules = [{**row, "proof": proof_url(row)} for row in exceptions or []]
         policy.write_text(json.dumps({"version": 1, "exceptions": rules}))
         return gate().scan(repo, head, base, Path(os.environ["TRUFFLEHOG_BINARY"]), policy, "forlex-ai/unit", 60)
+
+    def test_native_missing_old_push_tip_still_detects_reachable_canary(self):
+        """Real offline detection covers new reachable history when the orphaned old tip is absent."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repo = root / "repo"
+            repo.mkdir()
+            self.git(repo, "init", "-q")
+            value = self.canary()
+            (repo / "fixture.txt").write_text("token=" + value + "\n")
+            introduced = self.commit(repo)
+            (repo / "fixture.txt").unlink()
+            head = self.commit(repo)
+            policy = root / "policy.json"
+            policy.write_text('{"version":1,"exceptions":[]}')
+            module = gate()
+            report = module.scan(
+                repo,
+                head,
+                "f" * 40,
+                Path(os.environ["TRUFFLEHOG_BINARY"]),
+                policy,
+                "forlex-ai/unit",
+                60,
+                full_if_nonforward=True,
+            )
+            self.assertEqual(report["result"], "fail", json.dumps(report))
+            self.assertIsNone(report["effective_base"])
+            self.assertEqual(report["commit_count"], 2)
+            self.assertGreater(report["blocked"], 0)
+            self.assertTrue(any(row["commit"] == introduced for row in report["findings"]))
+            self.assertNotIn(value, json.dumps(report))
+            self.assertEqual(
+                module.scan(repo, head, "f" * 40, Path(os.environ["TRUFFLEHOG_BINARY"]), policy, "forlex-ai/unit", 60)[
+                    "result"
+                ],
+                "error",
+            )
 
     def test_same_canary_in_distinct_blobs_retains_the_unexcepted_occurrence(self):
         """Native value deduplication cannot hide another distinct exact source."""
@@ -1642,7 +2060,8 @@ class NativeScannerTests(unittest.TestCase):
             self.assertTrue(any(r["commit"] == merge for r in result["findings"]))
             self.assertNotIn(raw, json.dumps(result))
             self.assertEqual(
-                module.scan(repo, head, ancestor, scanner, policy, "forlex-ai/unit", 60, merge=merge)["result"], "error"
+                module.scan(repo, head, ancestor, scanner, policy, "forlex-ai/unit", 60, merge=merge)["result"],
+                "error",
             )
 
     def test_valid_candidate_exception_is_inert_and_cannot_waive_accepted_policy(self):
@@ -1802,7 +2221,15 @@ class NativeScannerTests(unittest.TestCase):
             module = gate()
             scanner = Path(os.environ["TRUFFLEHOG_BINARY"])
             report = module.scan(
-                repo, first, None, scanner, policy, "forlex-ai/unit", 60, tag_object=first, tag_ref="refs/tags/release"
+                repo,
+                first,
+                None,
+                scanner,
+                policy,
+                "forlex-ai/unit",
+                60,
+                tag_object=first,
+                tag_ref="refs/tags/release",
             )
             self.assertEqual(report["result"], "pass", json.dumps(report))
             self.assertFalse(any(row["source_kind"] == "tag_metadata" for row in report["findings"]))
@@ -1810,15 +2237,37 @@ class NativeScannerTests(unittest.TestCase):
             payloads.mkdir()
             _, commits = module.git_range(repo, first, None)
             index = module.materialize(
-                repo, commits, payloads, time.monotonic() + 60, include_tags=True, tag_object=first, tag_head=first
+                repo,
+                commits,
+                payloads,
+                time.monotonic() + 60,
+                include_tags=True,
+                tag_object=first,
+                tag_head=first,
             )
             self.assertFalse(any(source["kind"] == "tag_metadata" for sources in index.values() for source in sources))
             mismatch = module.scan(
-                repo, head, None, scanner, policy, "forlex-ai/unit", 60, tag_object=first, tag_ref="refs/tags/release"
+                repo,
+                head,
+                None,
+                scanner,
+                policy,
+                "forlex-ai/unit",
+                60,
+                tag_object=first,
+                tag_ref="refs/tags/release",
             )
             self.assertEqual(mismatch["result"], "error")
             delta = module.scan(
-                repo, head, first, scanner, policy, "forlex-ai/unit", 60, tag_object=first, tag_ref="refs/tags/release"
+                repo,
+                head,
+                first,
+                scanner,
+                policy,
+                "forlex-ai/unit",
+                60,
+                tag_object=first,
+                tag_ref="refs/tags/release",
             )
             self.assertEqual(delta["result"], "error")
 
