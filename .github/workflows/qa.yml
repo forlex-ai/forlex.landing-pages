@@ -19,7 +19,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      # Zero-dependency repo (no lockfile): skip redundant npm install.
+      # No npm cache / npm ci: this repo has zero dependencies (no lockfile).
+      - run: npm install --no-audit --no-fund
       - run: npm run test:tracking
       - run: npm run build
         env:
