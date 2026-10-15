@@ -47,7 +47,7 @@ Before editing, read only the context needed for the task:
   `LP_ROBOTS` Vercel env, not by editing sources).
 - Never commit `.env` files, real PostHog keys, or Pixel IDs. Placeholders only
   (`<phc_...>`) — `security.yml` scans for secret patterns.
-- **Anti-conflict & scanner hygiene for `AGENTS.md` and `MEMORY.md`:** insert new notes under their matching domain heading (never append raw entries at EOF, where concurrent PRs collide in 3-way Git merges), keep both files content-clean of false-positive secret-scanner literals (validated by `.forlex/security/test_secret_scan.py`) instead of adding commit-SHA-bound `.forlex/security/exceptions.json` rules, and separate code/CI commits from shared-doc (`AGENTS.md` / `MEMORY.md`) commits in multi-file PRs.
+- **Anti-conflict & scanner hygiene for `AGENTS.md` and `MEMORY.md`:** insert new notes under their matching domain heading (never append raw entries at EOF, where concurrent PRs collide in 3-way Git merges), keep both files content-clean of false-positive secret-scanner literals (enforced by `.github/workflows/secret-scan.yml` and `.forlex/security/secret_scan.py`) instead of adding commit-SHA-bound `.forlex/security/exceptions.json` rules, and separate code/CI commits from shared-doc (`AGENTS.md` / `MEMORY.md`) commits in multi-file PRs.
 
 ## Zero-Dependency Contract
 
