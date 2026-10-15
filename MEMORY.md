@@ -55,6 +55,7 @@ Durable repo memory: why things are the way they are. Update when decisions chan
   repo must keep `npm install` in CI and Vercel install step.
 - Direct push to `platform.backend:test` is blocked by repo rules (requires
   the Pipeline Summary check) — land via feature branch + PR.
+- **Shared-doc merge & scanner hygiene:** insert updates in `AGENTS.md` and `MEMORY.md` under their matching domain heading (never append raw entries at EOF), keep both files free of secret-scanner triggers rather than adding commit-SHA-pinned `.forlex/security/exceptions.json` entries, and commit shared-doc updates separately from code/CI changes.
 - The LP-A `?brands=0` flag and brand rotation live in `source.html`; the
   build must never strip the `URLSearchParams` bootstrap snippet.
 - Playwright MCP screenshots can only write under `/workspace` — copy to
