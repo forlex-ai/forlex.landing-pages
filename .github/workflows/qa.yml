@@ -13,13 +13,13 @@ concurrency:
 jobs:
   qa:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      # No npm cache / npm ci: this repo has zero dependencies (no lockfile).
-      - run: npm install --no-audit --no-fund
+      # Zero-dependency repo (no lockfile): skip redundant npm install.
       - run: npm run test:tracking
       - run: npm run build
         env:
@@ -62,6 +62,7 @@ jobs:
   smoke:
     # Keep the existing check name; qa now proves HTTP behavior for its own build.
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     needs: qa
     steps:
       - name: Confirm validated build smoke
