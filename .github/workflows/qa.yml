@@ -13,6 +13,7 @@ concurrency:
 jobs:
   qa:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -62,6 +63,7 @@ jobs:
   smoke:
     # Keep the existing check name; qa now proves HTTP behavior for its own build.
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     needs: qa
     steps:
       - name: Confirm validated build smoke
