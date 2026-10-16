@@ -1,5 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "regions": [
+    "gru1",
+    "dub1",
+    "fra1"
+  ],
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": null,
