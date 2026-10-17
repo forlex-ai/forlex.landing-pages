@@ -6,8 +6,8 @@
 > re-runbook. The old URL `forlex-ai/forlex-landing-pages` 301-redirects here.
 
 This folder was the complete source of the new repo. It was scaffolded inside
-`platform.backend` so it could be reviewed as a PR first, then pushed as a
-standalone repo (done — the new repo is the source of truth; `platform.backend`
+`forlex.backend` so it could be reviewed as a PR first, then pushed as a
+standalone repo (done — the new repo is the source of truth; `forlex.backend`
 vendors it as submodule `libs/forlex.landing-pages`).
 
 ## Option A — push this folder as the new repo (recommended)
@@ -37,7 +37,7 @@ Or run the helper (does steps 2–3 after you create the repo):
 ./scripts/create-github-repo.sh --org forlex-ai --repo forlex.landing-pages
 ```
 
-## Option B — keep as a submodule of platform.backend (like forlex.site)
+## Option B — keep as a submodule of forlex.backend (like forlex.site)
 
 Only if you want `libs/forlex.landing` pinned in the monorepo. After Option A:
 
