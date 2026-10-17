@@ -105,5 +105,5 @@ This repo intentionally has **no runtime dependencies and no lockfile**:
 - `forlex-ai/forlex.site` (Nuxt, `www.forlex.ai`): owns the apex + `www`
   hosts and the `/advogados` + `/upgrade-premium` rewrites. Never add those
   paths as Nuxt pages — the rewrite must win.
-- `forlex-ai/platform.backend`: vendors this repo as submodule
+- `forlex-ai/forlex.backend`: vendors this repo as submodule
   `libs/forlex.landing-pages` (same pattern as `libs/forlex.site`).
