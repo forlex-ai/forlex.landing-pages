@@ -1247,10 +1247,10 @@ body.clean .tbc{display:none!important}
 <div class="step__txt">
 <div class="zjob"><span class="stepn">3</span><span data-i18n="fw_s3_k">Crédito Automático no Oikos · 20% em ACUs</span></div>
 <h3 class="zh" data-i18n="fw_s3_h">Acompanhe cada clone e execução paga em tempo real e exporte seu extrato CSV.</h3>
-<p data-i18n-html="fw_s3_p">Sempre que uma organização assinante executa o seu agente em tarefas pagas, o motor financeiro <b>Oikos</b> calcula instantaneamente <b>20% dos ACUs consumidos</b> e credita na carteira da sua organização, com registro idempotente e auditável.</p>
+<p data-i18n-html="fw_s3_p">Sempre que uma organização assinante executa o seu agente em tarefas pagas, o motor financeiro <b>Oikos</b> calcula instantaneamente <b>20% dos ACUs consumidos</b> e credita na sua carteira com a tag <b>creator_royalty</b> — prontos para uso na LIVIA ou conversão em Saldo da Carteira com base no <b>preço atual do ACU do seu plano</b> e taxa de gestão regressiva (de <b>50% no Starter a 15% no Enterprise</b>, proporcional nos planos intermediários; mín. 100 ACUs).</p>
 <span class="uses__k">Transparência e controle financeiro</span>
 <ul class="uses">
-<li><svg class="lck" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m3.5 8.4 2.8 2.8 6.2-6.4"/></svg><span><b>Crédito automático em ACUs</b> pronto para usar em pesquisas, peças, revisões e automações</span></li>
+<li><svg class="lck" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m3.5 8.4 2.8 2.8 6.2-6.4"/></svg><span><b>Crédito automático em ACUs (<code>creator_royalty</code>)</b> pronto para pesquisas, peças, revisões ou conversão em Saldo da Carteira pelo preço atual do ACU no seu plano (taxa de gestão de 50% no Starter a 15% no Enterprise, mín. 100 ACUs)</span></li>
 <li><svg class="lck" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m3.5 8.4 2.8 2.8 6.2-6.4"/></svg><span><b>Painel Creator Analytics</b> com total de clones, execuções elegíveis e ranking por ativo</span></li>
 <li><svg class="lck" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m3.5 8.4 2.8 2.8 6.2-6.4"/></svg><span><b>Exportação CSV em 1 clique</b> com identificadores de transação, data, ativo e ACUs creditados</span></li>
 </ul>
@@ -1431,7 +1431,7 @@ body.clean .tbc{display:none!important}
 <div class="stnote"><span class="stnote__ic"><svg class="ui ui--check" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="m3.5 8.4 2.8 2.8 6.2-6.4"/></svg></span><p data-i18n-html="off_stnote"><b>Ainda não tem conta na Forlex?</b> Advogados com inscrição ativa na OAB podem ativar o plano Starter gratuitamente e acessar o Forlex Studio para criar e publicar seus agentes.</p></div>
 <div class="pnotes">
 <p>ACU (Unidade Computacional do Agente) mede o uso de IA na plataforma e varia conforme a complexidade de cada tarefa.</p>
-<p>Os royalties em ACUs são creditados na carteira Oikos da organização autora do ativo e são destinados ao uso de recursos de IA na plataforma Forlex (não conversíveis em moeda corrente).</p>
+<p>Os royalties em ACUs (<code>creator_royalty</code>) são creditados na carteira Oikos da organização autora para uso em recursos de IA ou conversão opcional em Saldo da Carteira do Sistema pelo valor do ACU do plano vigente descontada a taxa de gestão proporcional ao plano (50% no Starter a 15% no Enterprise; mínimo de 100 ACUs liquidados; ACUs comuns de plano ou pacotes não são conversíveis).</p>
 <p>Execuções realizadas pelo próprio autor ou dentro da mesma organização autora do ativo não geram royalties (trava automática de prevenção de autoexecução).</p>
 </div>
 </div></section>
@@ -1445,7 +1445,7 @@ body.clean .tbc{display:none!important}
 <details class="faq__i"><summary><span class="faq__q">Como funciona o link viral de indicação (?ref=) junto com o Marketplace?</span><span class="pm" aria-hidden="true"></span></summary><p class="faq__a">Cada ativo publicado possui um link compartilhável com o seu código de referência (?ref=). Quando você compartilha esse link no LinkedIn, WhatsApp ou em aulas, novos colegas que criam conta e assinam a Forlex geram bônus de indicação para você, além dos 20% de royalties contínuos sempre que executarem o seu agente.</p></details>
 <details class="faq__i"><summary><span class="faq__q">Os documentos dos meus clientes ficam visíveis quando publico um agente?</span><span class="pm" aria-hidden="true"></span></summary><p class="faq__a">Jamais. O pacote publicado no Marketplace contém apenas a definição metodológica do agente (instruções, etapas e formato esperado). Nenhum arquivo do seu Cofre (Vault), histórico de conversas ou dado de clientes é compartilhado.</p></details>
 <details class="faq__i"><summary><span class="faq__q">Como acompanho quantas vezes meu agente foi usado e quantos ACUs recebi?</span><span class="pm" aria-hidden="true"></span></summary><p class="faq__a">No painel do Forlex Studio e na área de Faturamento (Oikos), você visualiza em tempo real o total de instalações (clones), execuções pagas e ACUs creditados, podendo exportar o extrato completo em formato CSV para auditoria.</p></details>
-<details class="faq__i"><summary><span class="faq__q">Posso usar os ACUs recebidos como royalties em qualquer recurso da LIVIA?</span><span class="pm" aria-hidden="true"></span></summary><p class="faq__a">Sim. Os ACUs creditados como royalties entram no saldo da sua carteira Oikos e podem ser utilizados normalmente para elaboração de peças, revisão de contratos, pesquisa jurisprudencial verificada e automações do seu escritório.</p></details>
+<details class="faq__i"><summary><span class="faq__q">Posso usar os ACUs recebidos como royalties na LIVIA ou converter em Saldo da Carteira?</span><span class="pm" aria-hidden="true"></span></summary><p class="faq__a">Sim. Os ACUs creditados como royalties são marcados com a tag exclusiva <code>creator_royalty</code>: você pode utilizá-los normalmente em todos os recursos da LIVIA ou converter a partir de 100 ACUs liquidados em Saldo da Carteira do Sistema pelo valor do ACU no seu plano atual, descontada a taxa de gestão proporcional ao seu plano (50% no Starter a 15% no Enterprise; ACUs comuns de assinatura ou pacotes avulsos não são conversíveis).</p></details>
 <details class="faq__i"><summary><span class="faq__q">Minhas próprias execuções ou testes do meu escritório geram royalties?</span><span class="pm" aria-hidden="true"></span></summary><p class="faq__a">Não. Para garantir integridade contábil, o motor Oikos possui trava automática contra autoexecução: execuções realizadas pelo próprio criador ou por membros da mesma organização autora não geram repasse de royalties, nem execuções gratuitas ou administrativas.</p></details>
 </div>
 </div></section>
@@ -1465,7 +1465,7 @@ body.clean .tbc{display:none!important}
 <nav><a href="https://www.forlex.ai/oab" data-i18n="ftr_l1">Benefícios OAB</a><a href="https://www.forlex.ai/security" data-i18n="ftr_l2">Segurança</a><a href="https://www.forlex.ai/terms" data-i18n="ftr_l3">Termos de Uso e Política de Privacidade</a></nav></div>
 <div class="legals">
 <p class="legal" data-i18n="ftr_leg1">Programa de Criadores Fundadores Forlex: alíquota promocional de 20% (2000 bps) em ACUs sobre clonagens e execuções pagas elegíveis no Marketplace, comparada à taxa padrão de 10% (1000 bps). As condições promocionais podem ser atualizadas conforme as regras de governança do sistema Oikos.</p>
-<p class="legal" data-i18n="ftr_leg2">Os créditos em ACUs destinam-se exclusivamente ao consumo de inteligência artificial na plataforma Forlex e não configuram valor mobiliário, depósito bancário ou promessa de retorno financeiro em moeda fiduciária.</p>
+<p class="legal" data-i18n="ftr_leg2">Os créditos de royalties recebem a marcação exclusiva creator_royalty para consumo de IA na Forlex ou conversão opcional em Saldo da Carteira do Sistema pelo preço do ACU do plano vigente descontada a taxa de gestão proporcional ao plano (50% no Starter a 15% no Enterprise; mínimo de 100 ACUs liquidados; ACUs comuns não são elegíveis).</p>
 </div>
 <p class="copy" id="ftr-copy" data-i18n="ftr_copy">© 2026 Forlex Ltda. CNPJ 49.118.347/0001-22. Todos os direitos reservados.</p>
 </div></footer>
@@ -1539,7 +1539,7 @@ var I18N={
       fin_legal:'Promoção de lançamento de 20% em ACUs (dobro da taxa padrão de 10%) válida sobre clonagens e execuções pagas elegíveis no Marketplace Forlex.',
       ftr_l1:'Benefícios OAB',ftr_l2:'Segurança',ftr_l3:'Termos de Uso e Política de Privacidade',
       ftr_leg1:'Programa de Criadores Fundadores Forlex: alíquota promocional de 20% (2000 bps) em ACUs sobre clonagens e execuções pagas elegíveis no Marketplace, comparada à taxa padrão de 10% (1000 bps). As condições promocionais podem ser atualizadas conforme as regras de governança do sistema Oikos.',
-      ftr_leg2:'Os créditos em ACUs destinam-se exclusivamente ao consumo de inteligência artificial na plataforma Forlex e não configuram valor mobiliário, depósito bancário ou promessa de retorno financeiro em moeda fiduciária.',
+      ftr_leg2:'Os créditos de royalties recebem a marcação exclusiva creator_royalty para consumo de IA na Forlex ou conversão opcional em Saldo da Carteira do Sistema pelo preço do ACU do plano vigente descontada a taxa de gestão proporcional ao plano (50% no Starter a 15% no Enterprise; mínimo de 100 ACUs liquidados; ACUs comuns não são elegíveis).',
       ftr_copy:'© 2026 Forlex Ltda. CNPJ 49.118.347/0001-22. Todos os direitos reservados.'
     },
     html:{
@@ -1551,7 +1551,7 @@ var I18N={
       sim_lead:'Combine dois motores de crescimento: <b>20% de royalties recorrentes</b> sobre cada execução paga dos seus agentes no Marketplace e o <b>bônus de indicação (?ref=)</b> quando você convida colegas e escritórios para usar o seu agente na Forlex.',
       fw_lead:'Diferente de postar textos estáticos nas redes sociais, no Marketplace Forlex você publica uma <b>ferramenta jurídica executável</b> que outros advogados usam no dia a dia — e que remunera a sua conta a cada uso.',
       fw_s2_p:'Ao publicar, o Forlex Studio gera o seu link exclusivo com parâmetro <b>?ref=</b>. Quando você compartilha um caso prático demonstrando como o seu agente resolve uma dor jurídica real, cada clique rastreia tanto a <b>instalação do agente</b> quanto a <b>aquisição de novos assinantes</b>.',
-      fw_s3_p:'Sempre que uma organização assinante executa o seu agente em tarefas pagas, o motor financeiro <b>Oikos</b> calcula instantaneamente <b>20% dos ACUs consumidos</b> e credita na carteira da sua organização, com registro idempotente e auditável.',
+      fw_s3_p:'Sempre que uma organização assinante executa o seu agente em tarefas pagas, o motor financeiro <b>Oikos</b> calcula instantaneamente <b>20% dos ACUs consumidos</b> e credita na sua carteira com a tag <b>creator_royalty</b> — prontos para uso na LIVIA ou conversão em Saldo da Carteira pelo <b>preço do ACU do seu plano</b>, com taxa de gestão de <b>50% (Starter) a 15% (Enterprise)</b> (mín. 100 ACUs).',
       cmp_lead:'A taxa padrão recomendada do Marketplace Forlex é de <b>10% (1000 bps)</b> sobre execuções pagas. Ao publicar durante a janela de lançamento, você trava o dobro da alíquota: <b>20% (2000 bps) em ACUs</b>.',
       off_stnote:'<b>Ainda não tem conta na Forlex?</b> Advogados com inscrição ativa na OAB podem ativar o plano Starter gratuitamente e acessar o Forlex Studio para criar e publicar seus agentes.'
     }
@@ -1622,7 +1622,7 @@ var I18N={
       fin_legal:'20% ACU launch promotion (double the 10% standard rate) applies to eligible paid clones and runs on the Forlex Marketplace.',
       ftr_l1:'Bar Benefits',ftr_l2:'Security',ftr_l3:'Terms of Use & Privacy Policy',
       ftr_leg1:'Forlex Founding Creators Program: promotional rate of 20% (2000 bps) in ACUs on eligible paid Marketplace clones and runs, compared to the 10% (1000 bps) standard rate. Promotional terms are governed by Oikos ledger policies.',
-      ftr_leg2:'ACU credits are exclusively for AI compute usage on the Forlex platform and do not constitute securities, bank deposits, or fiat currency payouts.',
+      ftr_leg2:'Creator royalty credits are tagged exclusively as creator_royalty for AI compute usage on Forlex or optional conversion into System Wallet credit at the active plan\'s ACU price minus a plan-proportional management fee (50% on Starter down to 15% on Enterprise; 100 settled ACUs minimum; standard plan or pack ACUs are not eligible).',
       ftr_copy:'© 2026 Forlex, LLC. All rights reserved.'
     },
     html:{
@@ -1634,7 +1634,7 @@ var I18N={
       sim_lead:'Combine two growth engines: <b>20% recurring royalties</b> on every paid run of your Marketplace agents plus a <b>referral bonus (?ref=)</b> when you invite peers and law firms to run your agent on Forlex.',
       fw_lead:'Unlike posting static commentary on social media, on the Forlex Marketplace you publish an <b>executable legal tool</b> that other attorneys rely on daily — crediting your account on every paid run.',
       fw_s2_p:'When you publish, Forlex Studio generates your unique <b>?ref=</b> share link. When you post a real-world legal walkthrough showing how your agent solves a high-stakes problem, every click attributes both <b>agent clones</b> and <b>new subscriber sign-ups</b>.',
-      fw_s3_p:'Whenever a subscribing organization runs your agent on paid tasks, the <b>Oikos</b> financial engine automatically credits <b>20% of consumed ACUs</b> to your organization’s wallet with an idempotent, auditable ledger entry.',
+      fw_s3_p:'Whenever a subscribing organization runs your agent on paid tasks, the <b>Oikos</b> financial engine automatically credits <b>20% of consumed ACUs</b> to your organization’s wallet tagged as <b>creator_royalty</b> — ready for LIVIA usage or optional System Wallet conversion at <b>your plan’s ACU price</b> with a <b>50% (Starter) to 15% (Enterprise) management fee</b> (100 ACUs min.).',
       cmp_lead:'The documented standard rate on the Forlex Marketplace is <b>10% (1000 bps)</b> on eligible paid runs. By publishing during the launch window, you lock in double the rate: <b>20% (2000 bps) in ACUs</b>.',
       off_stnote:'<b>New to Forlex?</b> Eligible attorneys can activate the Starter plan for free and access Forlex Studio immediately to build and publish agents.'
     }
@@ -1705,7 +1705,7 @@ var I18N={
       fin_legal:'Promoción de lanzamiento de 20% en ACUs (doble de la tasa estándar de 10%) válida sobre clonaciones y ejecuciones pagas elegibles.',
       ftr_l1:'Beneficios',ftr_l2:'Seguridad',ftr_l3:'Términos de Uso y Política de Privacidad',
       ftr_leg1:'Programa de Creadores Fundadores Forlex: tasa promocional de 20% (2000 bps) en ACUs sobre clonaciones y ejecuciones pagas elegibles en el Marketplace, frente a la tasa estándar de 10% (1000 bps).',
-      ftr_leg2:'Los créditos en ACUs se destinan exclusivamente al consumo de inteligencia artificial en la plataforma Forlex y no constituyen valores mobiliarios ni depósitos bancarios.',
+      ftr_leg2:'Los créditos de regalías reciben la etiqueta exclusiva creator_royalty para consumo de IA en Forlex o conversión opcional en Saldo de la Billetera del Sistema al precio del ACU del plan vigente menos una comisión de gestión proporcional al plan (50% en Starter a 15% en Enterprise; mínimo 100 ACUs liquidados; los ACUs comunes no son elegibles).',
       ftr_copy:'© 2026 Forlex, LLC. Todos los derechos reservados.'
     },
     html:{
@@ -1717,7 +1717,7 @@ var I18N={
       sim_lead:'Combina dos motores de crecimiento: <b>20% de regalías recurrentes</b> sobre cada ejecución paga de tus agentes en el Marketplace y el <b>bono de referidos (?ref=)</b> cuando invitas a colegas y estudios a usar tu agente en Forlex.',
       fw_lead:'A diferencia de publicar textos estáticos en redes sociales, en el Marketplace Forlex publicas una <b>herramienta jurídica ejecutable</b> que otros abogados usan a diario — y que acredita ACUs en tu cuenta por cada uso.',
       fw_s2_p:'Al publicar, Forlex Studio genera tu enlace exclusivo con parámetro <b>?ref=</b>. Cuando compartes un caso práctico mostrando cómo tu agente resuelve un problema jurídico real, cada clic rastrea tanto la <b>instalación del agente</b> como la <b>adquisición de nuevos suscriptores</b>.',
-      fw_s3_p:'Cada vez que una organización suscriptora ejecuta tu agente en tareas pagas, el motor financiero <b>Oikos</b> calcula instantáneamente <b>20% de los ACUs consumidos</b> y los acredita en tu billetera con registro idempotente y auditable.',
+      fw_s3_p:'Cada vez que una organización suscriptora ejecuta tu agente en tareas pagas, el motor financiero <b>Oikos</b> calcula instantáneamente <b>20% de los ACUs consumidos</b> y los acredita con la etiqueta <b>creator_royalty</b> — listos para usar en LIVIA o convertir en Saldo de la Billetera al <b>precio del ACU de tu plan</b> con comisión de gestión de <b>50% (Starter) a 15% (Enterprise)</b> (mín. 100 ACUs).',
       cmp_lead:'La tasa estándar recomendada del Marketplace Forlex es de <b>10% (1000 bps)</b> sobre ejecuciones pagas. Al publicar durante el lanzamiento, aseguras el doble de regalía: <b>20% (2000 bps) en ACUs</b>.',
       off_stnote:'<b>¿Aún no tienes cuenta en Forlex?</b> Puedes activar el plan Starter sin costo y acceder a Forlex Studio para crear y publicar tus agentes.'
     }
