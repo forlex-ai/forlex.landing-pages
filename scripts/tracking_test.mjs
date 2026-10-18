@@ -69,7 +69,7 @@ function setup({ slug = 'advogados', block = '02 Hero', plan = '', disabled = fa
 for (const [slug, content, event] of [
   ['advogados', 'lp_advogados', 'Lead'],
   ['upgrade-premium', 'lp_upgrade_premium', 'InitiateCheckout'],
-  ['criadores', 'lp_criadores', 'Lead'],
+  ['creators', 'lp_creators', 'Lead'],
 ]) {
   test(`${slug}: page and intent events, not completed conversions`, () => {
     const state = setup({ slug });

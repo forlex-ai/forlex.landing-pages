@@ -53,6 +53,6 @@
 
   <!-- Bottom rule + domain -->
   <line x1="80" y1="530" x2="1120" y2="530" stroke="#C0D4E0" stroke-opacity="0.14"/>
-  <text x="80" y="572" fill="#719DBA" font-family="Sora, Inter, system-ui, -apple-system, sans-serif" font-size="20" font-weight="600">forlex.ai/criadores</text>
+  <text x="80" y="572" fill="#719DBA" font-family="Sora, Inter, system-ui, -apple-system, sans-serif" font-size="20" font-weight="600">forlex.ai/creators</text>
   <text x="1120" y="572" text-anchor="end" fill="#C0D4E0" fill-opacity="0.7" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="18">Forlex Studio · Marketplace Jurídico · Oikos Ledger</text>
 </svg>

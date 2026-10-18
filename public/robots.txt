@@ -1,5 +1,9 @@
 User-agent: *
-Disallow: /
+Allow: /creators
+Allow: /en/creators
+Allow: /es/creators
+Disallow: /advogados
+Disallow: /upgrade-premium
 
-# LPs are campaign surfaces (paid traffic). Indexation is per-LP via robots meta.
-# ENG-4705: both LPs ship `noindex` until João confirms. Keep Disallow until then.
+# Paid-only LPs (/advogados, /upgrade-premium) remain Disallow + noindex (ENG-4705).
+# /creators (ENG-4074 Founding Creators Program) is indexed with canonical /creators + hreflang alternates.

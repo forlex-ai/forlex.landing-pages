@@ -10,6 +10,24 @@
   "framework": null,
   "cleanUrls": true,
   "trailingSlash": false,
+  "rewrites": [
+    {
+      "source": "/criadores",
+      "destination": "/creators"
+    },
+    {
+      "source": "/en/creators",
+      "destination": "/creators"
+    },
+    {
+      "source": "/es/creators",
+      "destination": "/creators"
+    },
+    {
+      "source": "/pt/creators",
+      "destination": "/creators"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",

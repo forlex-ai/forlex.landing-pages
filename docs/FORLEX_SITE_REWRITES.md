@@ -29,8 +29,24 @@ Add a `rewrites` block **alongside** the existing `redirects` (apex → www stay
       "destination": "https://go.forlex.ai/upgrade-premium"
     },
     {
+      "source": "/creators",
+      "destination": "https://go.forlex.ai/creators"
+    },
+    {
+      "source": "/en/creators",
+      "destination": "https://go.forlex.ai/en/creators"
+    },
+    {
+      "source": "/es/creators",
+      "destination": "https://go.forlex.ai/es/creators"
+    },
+    {
+      "source": "/pt/creators",
+      "destination": "https://go.forlex.ai/pt/creators"
+    },
+    {
       "source": "/criadores",
-      "destination": "https://go.forlex.ai/criadores"
+      "destination": "https://go.forlex.ai/creators"
     },
     {
       "source": "/assets/tracking-advogados.js",
@@ -41,8 +57,8 @@ Add a `rewrites` block **alongside** the existing `redirects` (apex → www stay
       "destination": "https://go.forlex.ai/assets/tracking-upgrade-premium.js"
     },
     {
-      "source": "/assets/tracking-criadores.js",
-      "destination": "https://go.forlex.ai/assets/tracking-criadores.js"
+      "source": "/assets/tracking-creators.js",
+      "destination": "https://go.forlex.ai/assets/tracking-creators.js"
     }
   ]
 }
