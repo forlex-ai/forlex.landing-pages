@@ -5,7 +5,7 @@ Static-first repo for campaign landing pages. Deploys to Vercel as `go.forlex.ai
 - **Stack:** zero-dependency static HTML + Node build (no framework). Each LP is a self-contained `source.html` (single-file workflow from design/AI) plus a `lp.config.json` with CTAs, UTMs and OG.
 - **Why a separate repo:** campaign LPs iterate faster than `forlex.site`, need isolated deploys/previews, and keep paid-traffic experiments out of the main marketing site deploy queue.
 - **ENG-4705:** ships `advogados` (LP A) and `upgrade-premium` (LP B) for the OAB × Forlex Meta Ads campaign.
-- **ENG-4074 (Marketplace Launch):** ships `criadores` (LP C — Programa Criador Fundador 20% Royalties em ACUs) with an interactive Royalties + Referral (`?ref=`) simulator and viral GTM mechanics.
+- **ENG-4074 (Marketplace Launch):** ships `creators` (LP C — Founding Creators Program · 20% Royalties in ACUs, with `/criadores`, `/en/creators`, and `/es/creators` rewrites + runtime PT/EN/ES i18n) with an interactive Royalties + Referral (`?ref=`) simulator and viral GTM mechanics.
 
 ## URLs
 
@@ -13,7 +13,7 @@ Static-first repo for campaign landing pages. Deploys to Vercel as `go.forlex.ai
 | --- | --- | --- |
 | LP A — novos usuários (Starter grátis) | `https://go.forlex.ai/advogados` | `https://www.forlex.ai/advogados` |
 | LP B — upgrade (Premium 30% off) | `https://go.forlex.ai/upgrade-premium` | `https://www.forlex.ai/upgrade-premium` |
-| LP C — criadores (Marketplace · 20% Royalties) | `https://go.forlex.ai/criadores` | `https://www.forlex.ai/criadores` |
+| LP C — creators (Marketplace · 20% Royalties) | `https://go.forlex.ai/creators` (aliases: `/criadores`, `/en/creators`, `/es/creators`) | `https://www.forlex.ai/creators` (aliases: `/criadores`, `/en/creators`, `/es/creators`) |
 
 Meta Ads should point to the LP domain directly (`go.forlex.ai/...`). The `forlex.ai/...` URLs keep working via rewrites in `forlex.site` (see `docs/FORLEX_SITE_REWRITES.md`) so the ENG-4705 and ENG-4074 specs stay valid.
 
@@ -29,7 +29,7 @@ npm run qa:built  # post-build QA (dist, includes OG + tracking)
 npm run dev       # serve dist/ at http://127.0.0.1:3000
 ```
 
-Open `http://127.0.0.1:3000/advogados`, `http://127.0.0.1:3000/upgrade-premium`, and `http://127.0.0.1:3000/criadores`.
+Open `http://127.0.0.1:3000/advogados`, `http://127.0.0.1:3000/upgrade-premium`, and `http://127.0.0.1:3000/creators`.
 Flags: `?static=1` disables animations (screenshots), `?brands=0` freezes the LP-A headline rotation.
 
 ## Repo layout

@@ -1,16 +1,16 @@
-# LP C — `/criadores` (Programa Criador Fundador · Forlex Marketplace)
+# LP C — `/creators` (Founding Creators Program · Forlex Marketplace)
 
-- **Version:** `LP_C_criadores_v1` (18/10/2026)
-- **Audience:** Advogados especialistas, sócios de bancas boutiques, pareceristas, professores de Direito e líderes de prática jurídica com OAB ativa.
+- **Version:** `LP_C_creators_v1` (18/10/2026)
+- **Audience:** Advogados especialistas, sócios de bancas boutiques, pareceristas, professores de Direito e líderes de Legal Ops (Brasil e internacional).
 - **Goal:** Publicar o primeiro Agente, Skill ou Workflow jurídico verificado no Forlex Marketplace para garantir **20% de royalties em ACUs** (dobro da taxa padrão de 10%) e ativar o loop viral de compartilhamento com `?ref=`.
-- **Canonical URL:** `https://go.forlex.ai/criadores` (e `https://www.forlex.ai/criadores` via rewrite em `forlex.site`).
-- **Source:** `source.html` (alinhado 1:1 ao design system das LPs Forlex: tipografia `Sora` + `Inter` WOFF2 embarcada, paleta `--c950`/`--c900`/`--c800`/`--blue`/`--b450`/`--b200`/`--gelo`/`--off`, seções `data-figma`, suporte a `?static=1` e `prefers-reduced-motion`).
+- **Canonical URL:** `https://go.forlex.ai/creators` e `https://www.forlex.ai/creators` (com aliases `/criadores`, `/en/creators`, `/es/creators`, `/pt/creators` e seletor de idioma `PT · EN · ES`).
+- **Source:** `source.html` (alinhado 1:1 ao design system das LPs Forlex: tipografia `Sora` + `Inter` WOFF2 embarcada, paleta `--c950`/`--c900`/`--c800`/`--blue`/`--b450`/`--b200`/`--gelo`/`--off`, seções `data-figma`, suporte a `?static=1`, `?lang=pt|en|es`, e `prefers-reduced-motion`).
 
 ---
 
 ## CTAs (6, destino unificado com atribuição de campanha)
 
-`https://app.forlex.ai/login?utm_source=meta&utm_medium=paid_social&utm_campaign=programa_criadores_20pct&utm_content=lp_c_criadores`
+`https://app.forlex.ai/login?utm_source=meta&utm_medium=paid_social&utm_campaign=programa_criadores_20pct&utm_content=lp_c_creators`
 
 | # | Bloco (`data-figma`) | Copy do CTA |
 | --- | --- | --- |
@@ -60,11 +60,11 @@
 
 ### 3. Estratégia de Canais e Sequência de Lançamento
 - **Onda 1 — Seeding VIP (Dias 1–5):**
-  - Convite direto para os 50 power-users mais ativos do Studio Forlex e professores/coordenadores de pós-graduação jurídica com link direto para `go.forlex.ai/criadores`.
+  - Convite direto para os 50 power-users mais ativos do Studio Forlex e professores/coordenadores de pós-graduação jurídica com link direto para `go.forlex.ai/creators` (alias `go.forlex.ai/criadores`).
   - Meta: 25 agentes fundadores publicados antes da abertura de tráfego pago.
 - **Onda 2 — Aquisição Meta Ads + LinkedIn Ads (Dias 6–21):**
   - Criativos estáticos e em vídeo curto destacando o **Simulador de Royalties** (*"Quanto vale a metodologia da sua banca quando 500 escritórios usam seu agente?"*).
-  - Destino primário de mídia paga: `https://go.forlex.ai/criadores?utm_source=meta&utm_medium=paid_social&utm_campaign=programa_criadores_20pct&utm_content=lp_c_criadores`.
+  - Destino primário de mídia paga: `https://go.forlex.ai/creators?utm_source=meta&utm_medium=paid_social&utm_campaign=programa_criadores_20pct&utm_content=lp_c_creators`.
 - **Onda 3 — Ranking Público & Fechamento da Coorte 20% (Dias 22–30):**
   - Divulgação dos Top 10 Agentes Jurídicos mais instalados da quinzena e contagem regressiva para encerramento das vagas com `2000 bps` (retorno à taxa padrão de `1000 bps`).
 
@@ -76,5 +76,5 @@
 npm run qa
 npm run build
 npm run qa:built
-npm run dev  # http://127.0.0.1:3000/criadores
+npm run dev  # http://127.0.0.1:3000/creators
 ```

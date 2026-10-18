@@ -77,10 +77,19 @@ function escapeHtml(s) {
 function injectHead(html, { config, baseUrl, pixelId, trackingSrc, robots }) {
   const canonical = `${baseUrl}${config.canonicalPath}`;
   const ogUrl = canonical;
-  const ogImage = `${baseUrl}${config.og.imagePath}`;
+  const ogImage = `${baseUrl}${config.og.imagePath || config.og.image}`;
+  const alternateLinks = config.alternates
+    ? '\n' +
+      Object.entries(config.alternates)
+        .map(
+          ([lang, altPath]) =>
+            `<link rel="alternate" hreflang="${escapeHtml(lang)}" href="${escapeHtml(`${baseUrl}${altPath}`)}" />`,
+        )
+        .join('\n')
+    : '';
   const injection = `
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-<link rel="canonical" href="${escapeHtml(canonical)}" />
+<link rel="canonical" href="${escapeHtml(canonical)}" />${alternateLinks}
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="Forlex" />
 <meta property="og:title" content="${escapeHtml(config.og.title)}" />
@@ -185,7 +194,9 @@ function main() {
       console.error(`[${slug}] source not found: ${sourceFile}`);
       process.exit(1);
     }
-    const robots = robotsOverride || config.robots || 'noindex';
+    const robots = config.allowIndexing
+      ? config.robots || 'index, follow'
+      : robotsOverride || config.robots || 'noindex';
     let html = readFileSync(sourceFile, 'utf8');
     html = tagCtas(html, slug);
     const trackingFilename = `tracking-${slug}.js`;

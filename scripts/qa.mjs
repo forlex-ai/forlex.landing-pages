@@ -94,7 +94,9 @@ function qaOne(slug) {
   const robots = html.match(/<meta\s+name=["']robots["']\s+content=["']([^"']*)["']/i)?.[1] || '';
   if (!robots) fail(slug, 'missing robots meta');
   else {
-    const expected = process.env.LP_ROBOTS || config.robots || 'noindex';
+    const expected = config.allowIndexing
+      ? config.robots || 'index, follow'
+      : process.env.LP_ROBOTS || config.robots || 'noindex';
     if (CHECK_BUILT && robots !== expected) fail(slug, `robots mismatch: expected "${expected}", got "${robots}"`);
     else pass(slug, `robots="${robots}"`);
   }
