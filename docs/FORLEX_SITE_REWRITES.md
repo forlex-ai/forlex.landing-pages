@@ -27,6 +27,22 @@ Add a `rewrites` block **alongside** the existing `redirects` (apex → www stay
     {
       "source": "/upgrade-premium",
       "destination": "https://go.forlex.ai/upgrade-premium"
+    },
+    {
+      "source": "/criadores",
+      "destination": "https://go.forlex.ai/criadores"
+    },
+    {
+      "source": "/assets/tracking-advogados.js",
+      "destination": "https://go.forlex.ai/assets/tracking-advogados.js"
+    },
+    {
+      "source": "/assets/tracking-upgrade-premium.js",
+      "destination": "https://go.forlex.ai/assets/tracking-upgrade-premium.js"
+    },
+    {
+      "source": "/assets/tracking-criadores.js",
+      "destination": "https://go.forlex.ai/assets/tracking-criadores.js"
     }
   ]
 }

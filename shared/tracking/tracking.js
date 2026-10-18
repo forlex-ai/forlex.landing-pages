@@ -248,13 +248,25 @@
       return explicit;
     }
     var name = block.replace(/^\d+\s+/, '').toLowerCase();
+    if (/^oferta criador/i.test(name)) {
+      return 'oferta_criador';
+    }
     if (name === 'oferta') {
       var plan = anchor.closest('.plan');
       var heading = plan && plan.querySelector('h3');
       if (heading && /starter/i.test(heading.textContent)) {
         return 'oferta_starter';
       }
+      if (heading && /criador/i.test(heading.textContent)) {
+        return 'oferta_criador';
+      }
       return 'oferta_premium';
+    }
+    if (/simulador/i.test(name)) {
+      return 'simulador';
+    }
+    if (/flywheel|como funciona/i.test(name)) {
+      return 'como_funciona';
     }
     var position = name.match(/header|hero|funcionalidades|comparativo|benef|final/);
     if (position) {
