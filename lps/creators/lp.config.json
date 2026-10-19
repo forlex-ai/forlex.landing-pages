@@ -1,0 +1,33 @@
+{
+  "slug": "creators",
+  "version": "LP_C_creators_v1",
+  "title": "Programa de Criadores Fundadores Forlex | Ganhe 20% em ACUs no Marketplace Jurídico",
+  "description": "Transforme a sua tese jurídica em agentes, fluxos e pacotes da LIVIA. Como Criador Fundador, você recebe 20% de royalties em ACUs (o dobro da taxa padrão de 10%) a cada clonagem e execução paga no Marketplace Forlex.",
+  "canonicalPath": "/creators",
+  "sourceFile": "source.html",
+  "expectedCtaCount": 6,
+  "ctaDestinationPrefix": "https://app.forlex.ai/login",
+  "expectedUtm": {
+    "utm_source": "meta",
+    "utm_medium": "paid_social",
+    "utm_campaign": "programa_criadores_20pct",
+    "utm_content": "lp_c_creators"
+  },
+  "og": {
+    "title": "Programa de Criadores Fundadores Forlex — 20% de Royalties em ACUs",
+    "description": "Publique agentes, playbooks e packs jurídicos no Studio Forlex. Ganhe 20% em ACUs a cada execução paga + bônus de indicação viral.",
+    "imagePath": "/og/creators.png",
+    "imageWidth": 1200,
+    "imageHeight": 630,
+    "imageAlt": "Forlex Founding Creators Program — 20% Royalties in ACUs"
+  },
+  "alternates": {
+    "pt-BR": "/creators",
+    "en": "/en/creators",
+    "es": "/es/creators",
+    "x-default": "/creators"
+  },
+  "robots": "index, follow",
+  "allowIndexing": true,
+  "notes": "ENG-4074 LP C (Founding Creators Launch · 20% Royalties in ACUs). Canonical English slug /creators with /criadores, /en/creators, and /es/creators rewrites + runtime i18n (Forlex Ltda in PT-BR, Forlex, LLC without CNPJ in EN/ES)."
+}

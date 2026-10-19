@@ -69,6 +69,7 @@ function setup({ slug = 'advogados', block = '02 Hero', plan = '', disabled = fa
 for (const [slug, content, event] of [
   ['advogados', 'lp_advogados', 'Lead'],
   ['upgrade-premium', 'lp_upgrade_premium', 'InitiateCheckout'],
+  ['creators', 'lp_creators', 'Lead'],
 ]) {
   test(`${slug}: page and intent events, not completed conversions`, () => {
     const state = setup({ slug });
@@ -93,11 +94,14 @@ for (const [slug, content, event] of [
 
 for (const [block, plan, position] of [
   ['01 Header', '', 'header'], ['02 Hero', '', 'hero'],
+  ['04 Simulador de Royalties', '', 'simulador'],
+  ['06 Como Funciona (Flywheel Viral)', '', 'como_funciona'],
   ['06 Funcionalidades escritorio', '', 'funcionalidades'],
   ['07 Comparativo', '', 'comparativo'], ['03 Comparativo Starter x Premium', '', 'comparativo'],
   ['04 Beneficios do Premium', '', 'beneficios'],
   ['09 Oferta', 'Forlex Starter', 'oferta_starter'],
   ['09 Oferta', 'Forlex Premium', 'oferta_premium'], ['07 Oferta', '', 'oferta_premium'],
+  ['10 Oferta Criador Fundador', 'Programa Criador Fundador Forlex', 'oferta_criador'],
   ['12 CTA final', '', 'final'], ['09 CTA final', '', 'final'],
 ]) {
   test(`CTA position: ${block} ${plan}`, () => {

@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <radialGradient id="glowA" cx="50%" cy="0%" r="75%">
+      <stop offset="0%" stop-color="#598FB2" stop-opacity="0.45"/>
+      <stop offset="55%" stop-color="#598FB2" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#091920" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowB" cx="88%" cy="90%" r="55%">
+      <stop offset="0%" stop-color="#719DBA" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#091920" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="acc" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#C0D4E0"/>
+      <stop offset="50%" stop-color="#719DBA"/>
+      <stop offset="100%" stop-color="#598FB2"/>
+    </linearGradient>
+    <pattern id="grid" width="64" height="64" patternUnits="userSpaceOnUse">
+      <path d="M 64 0 L 0 0 0 64" fill="none" stroke="#C0D4E0" stroke-opacity="0.06" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <rect width="1200" height="630" fill="#091920"/>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+  <rect width="1200" height="630" fill="url(#glowA)"/>
+  <rect width="1200" height="630" fill="url(#glowB)"/>
+
+  <!-- Top bar: Forlex logo -->
+  <g transform="translate(80, 66) scale(0.22)">
+    <path fill="#6bacd7" d="M360,471v28h34.47V418.78H473V384.32H446.64A86.68,86.68,0,0,0,360,471Z" transform="translate(-310,-334)"/>
+    <polygon fill="#6bacd7" points="311.64 391.91 311.64 498.99 346.1 498.99 346.1 370.47 473.01 370.47 473.01 336 367.55 336 311.64 391.91" transform="translate(-310,-334)"/>
+    <polygon fill="#FAFAFA" points="542.21 498.99 569.2 498.99 569.2 431.31 637.5 431.31 637.5 405.46 569.2 405.46 569.2 361.85 650.59 361.85 650.59 336 542.21 336 542.21 498.99" transform="translate(-310,-334)"/>
+    <polygon fill="#FAFAFA" points="810.49 498.99 837.49 498.99 837.49 397.91 882.55 397.91 882.55 372.14 810.49 372.14 810.49 498.99" transform="translate(-310,-334)"/>
+    <rect fill="#FAFAFA" x="591.23" y="2" width="26.99" height="162.99"/>
+    <path fill="#FAFAFA" d="M720.33,370.15c-36.74,0-66.53,28.49-66.53,65.32s29.79,65.32,66.53,65.32,66.54-28.49,66.54-65.32S757.08,370.15,720.33,370.15Zm0,104.75a39.44,39.44,0,1,1,39.55-39.43A39.49,39.49,0,0,1,720.33,474.9Z" transform="translate(-310,-334)"/>
+    <path fill="#FAFAFA" d="M1086,444.57a66.58,66.58,0,0,0,.6-8.89c0-36.83-29.78-65.32-66.53-65.32s-66.54,28.49-66.54,65.32S983.27,501,1020,501c24.49,0,45.88-12.67,57.43-32l-23-14.05a39.54,39.54,0,0,1-73-10.36H1086M1020,396.24A39.55,39.55,0,0,1,1057.8,424H982.24A39.53,39.53,0,0,1,1020,396.24Z" transform="translate(-310,-334)"/>
+    <polygon fill="#FAFAFA" points="1209.99 372.14 1176.88 372.14 1150.21 410.23 1123.54 372.14 1090.43 372.14 1133.65 433.87 1088.06 498.99 1121.17 498.99 1150.21 457.51 1179.25 498.99 1212.36 498.99 1166.76 433.87 1209.99 372.14" transform="translate(-310,-334)"/>
+  </g>
+
+  <!-- Eyebrow pill -->
+  <g transform="translate(80, 152)">
+    <rect width="586" height="40" rx="20" fill="#0F2B38" fill-opacity="0.75" stroke="#C0D4E0" stroke-opacity="0.22"/>
+    <circle cx="24" cy="20" r="5" fill="#598FB2"/>
+    <text x="42" y="26" fill="#C0D4E0" font-family="Sora, Inter, system-ui, -apple-system, sans-serif" font-size="16" font-weight="500">Programa de Criadores Fundadores · Promoção 20% em ACUs</text>
+  </g>
+
+  <!-- Headline -->
+  <text x="80" y="274" fill="#FAFAFA" font-family="Sora, Inter, system-ui, -apple-system, sans-serif" font-size="60" font-weight="600" letter-spacing="-2.2">Sua tese jurídica vira ativo.</text>
+  <text x="80" y="348" fill="url(#acc)" font-family="Sora, Inter, system-ui, -apple-system, sans-serif" font-size="60" font-weight="600" letter-spacing="-2.2">Ganhe 20% em ACUs por uso.</text>
+
+  <!-- Sub -->
+  <text x="80" y="420" fill="#C0D4E0" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="24" font-weight="400">Publique agentes, fluxos e pacotes da LIVIA no Marketplace Forlex e receba</text>
+  <text x="80" y="454" fill="#C0D4E0" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="24" font-weight="400">o dobro da taxa padrão (20% vs. 10%) + bônus viral de indicação (?ref=).</text>
+
+  <!-- Bottom rule + domain -->
+  <line x1="80" y1="530" x2="1120" y2="530" stroke="#C0D4E0" stroke-opacity="0.14"/>
+  <text x="80" y="572" fill="#719DBA" font-family="Sora, Inter, system-ui, -apple-system, sans-serif" font-size="20" font-weight="600">forlex.ai/creators</text>
+  <text x="1120" y="572" text-anchor="end" fill="#C0D4E0" fill-opacity="0.7" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="18">Forlex Studio · Marketplace Jurídico · Oikos Ledger</text>
+</svg>
