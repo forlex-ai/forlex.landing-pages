@@ -14,11 +14,7 @@ Cursor, Claude Code, and Codex).
 - Hosting: Vercel project `forlex-landing-pages` (team `forlex`), output `dist`,
   primary domain `go.forlex.ai`.
 - Observability: PostHog (`lp_page_viewed`, `lp_cta_clicked`) + Meta Pixel
-<<<<<<< origin/test
-  (`PageView`, `ViewContent`, per-LP intent events), injected at build time.
-=======
-  (`PageView`, `Lead`), injected at build time via `shared/tracking/tracking.js`.
->>>>>>> local
+  (`PageView`, `ViewContent`, per-LP intent events), injected at build time via `shared/tracking/tracking.js`.
 - Tests: `scripts/qa.mjs` (static + post-build gates) + CI smoke job.
 
 ## Commands (npm)
