@@ -1,9 +1,8 @@
 # Forlex Landing Pages Agent Guide
 
-This is the tool-neutral entrypoint for coding agents working in the
-`forlex-ai/forlex.landing-pages` repository. `CLAUDE.md` remains the detailed
-rulebook; this file keeps the cross-agent contract explicit for Codex, Claude,
-Cursor, and future automation.
+This is the canonical, tool-neutral entrypoint for coding agents working in the
+`forlex-ai/forlex.landing-pages` repository (supported across Antigravity,
+Cursor, Claude Code, and Codex).
 
 ## Repository Identity
 
@@ -15,8 +14,32 @@ Cursor, and future automation.
 - Hosting: Vercel project `forlex-landing-pages` (team `forlex`), output `dist`,
   primary domain `go.forlex.ai`.
 - Observability: PostHog (`lp_page_viewed`, `lp_cta_clicked`) + Meta Pixel
+<<<<<<< origin/test
   (`PageView`, `ViewContent`, per-LP intent events), injected at build time.
+=======
+  (`PageView`, `Lead`), injected at build time via `shared/tracking/tracking.js`.
+>>>>>>> local
 - Tests: `scripts/qa.mjs` (static + post-build gates) + CI smoke job.
+
+## Commands (npm)
+
+```bash
+npm install                                             # no-op, zero deps
+npm run build                                           # lps/*/source.html -> dist/
+npm run qa                                              # pre-build: sources
+npm run qa:built                                        # post-build: dist (OG + tracking injections)
+npm run dev                                             # dist/ at http://127.0.0.1:3000
+npm run new-lp -- --slug=my-lp --title="T" --desc="D"   # scaffold new LP
+npm run extract-assets -- --slug=advogados              # dry-run; add --apply to extract
+```
+
+## Build Pipeline & Script Policy
+
+1. **`lps/<slug>/source.html`**: single-file HTML owning copy, layout, inline `<style>`/JS, and base64 fonts/images. No external requests except build-injected tracking.
+2. **`lps/<slug>/lp.config.json`**: typed contract — `title`, `description`, `expectedCtaCount`, `expectedUtm`, `ctaDestinationPrefix`, OG block, `robots`.
+3. **`scripts/build.mjs`**: injects canonical, OG/Twitter, `robots`, favicon, Meta Pixel snippet, and `/assets/tracking-<slug>.js`; tags app CTAs with `data-lp-cta`; writes `dist/<slug>/index.html`.
+4. **`shared/tracking/tracking.js`**: dependency-free vanilla JS template (<10 KB, DNT-aware) sending PostHog `POST <host>/capture/` (`sendBeacon` → `fetch keepalive` fallback) and `fbq` calls. `cta_block` resolution order: explicit `data-cta-block` → closest `[data-figma]` → `header`/`footer`/section `id` → `'unknown'`. Exposes `window.__forlexLp` (`slug`, `version`) for QA.
+5. **Node ESM scripts (`scripts/*.mjs`)**: plain Node stdlib only (`node:fs`, `node:path`, `node:http`), runnable directly with `--help` usage comments, block-form `if` statements (no inline single-line `if`), and `snake_case` files / `camelCase` functions / `UPPER_SNAKE` constants.
 
 ## First Reads
 
