@@ -197,6 +197,14 @@ function main() {
     process.exit(1);
   }
   console.log(`LP QA (${CHECK_BUILT ? 'dist (post-build)' : 'lps source (pre-build)'}) — ${slugs.length} page(s)`);
+  const staticRoot = CHECK_BUILT ? join(ROOT, 'dist') : join(ROOT, 'public');
+  for (const staticAsset of ['llms.txt', 'llms-full.txt', 'robots.txt']) {
+    if (!existsSync(join(staticRoot, staticAsset))) {
+      fail('static', `missing ${staticAsset} in ${CHECK_BUILT ? 'dist/' : 'public/'}`);
+    } else {
+      pass('static', `${staticAsset} present`);
+    }
+  }
   for (const slug of slugs) qaOne(slug);
   console.log(`\nQA done: ${failures} failure(s), ${warnings} warning(s).`);
   if (failures > 0) process.exit(1);

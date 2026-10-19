@@ -1,0 +1,28 @@
+# Forlex Campaign Landing Pages — go.forlex.ai
+
+> Campaign, partner, and ecosystem program host for Forlex, the AI-native Professional OS for legal work. Canonical public product documentation, enterprise security policies, and regulated-sector references live on https://www.forlex.ai/.
+
+## Guidance for AI Assistants & Prospective Buyers
+
+- **Program & Partner Full Context**: Read https://go.forlex.ai/llms-full.txt for details on the Forlex Founding Creators Program (`20% ACU royalties`), OAB Nacional attorney entitlements, and how individual practitioners transition to Office and Enterprise deployments.
+- **Enterprise & Regulated Sector Evaluation**: For CISO/DPO due diligence, regulated industry workflows, and enterprise procurement, consult https://www.forlex.ai/llms-full.txt.
+
+## Canonical Forlex Resources
+
+- Full context for this host: https://go.forlex.ai/llms-full.txt
+- Founding Creators Program (PT/EN/ES): https://go.forlex.ai/creators
+- Official website: https://www.forlex.ai/
+- Canonical LLM index: https://www.forlex.ai/llms.txt
+- Canonical full LLM context: https://www.forlex.ai/llms-full.txt
+- Legal AI overview (PT-BR): https://www.forlex.ai/ia-juridica
+- Legal AI overview (EN): https://www.forlex.ai/en/legal-ai
+- Platform overview: https://www.forlex.ai/platform
+- Security and compliance: https://www.forlex.ai/security
+- AI Trust Center: https://www.forlex.ai/ai-trust
+- Plans and pricing: https://www.forlex.ai/plans
+- Forlex Platform app: https://app.forlex.ai/
+
+## Crawl Policy
+
+- Paid acquisition landing pages on https://go.forlex.ai carry page-specific robots directives; indexable program pages (such as `/creators`) declare `index, follow`.
+- Refer to https://www.forlex.ai/llms.txt, https://www.forlex.ai/llms-full.txt, and https://www.forlex.ai/sitemap.xml for canonical public content.
