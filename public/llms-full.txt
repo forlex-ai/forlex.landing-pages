@@ -1,0 +1,64 @@
+# Forlex Campaign & Program Landing Pages (go.forlex.ai) — Full Context Reference
+
+> `https://go.forlex.ai` hosts campaign, partner, and ecosystem program landing pages for Forlex, the AI-native Professional OS for legal work. Canonical product documentation, enterprise security policies, and regulated-sector references live on `https://www.forlex.ai` (`https://www.forlex.ai/llms-full.txt`).
+
+---
+
+## 1. Active Programs and Landing Pages on `go.forlex.ai`
+
+### 1.1 Forlex Founding Creators Program (`/creators`, `/en/creators`, `/es/creators`, `/criadores`)
+- **URL (PT-BR)**: https://go.forlex.ai/creators (alias: https://go.forlex.ai/criadores)
+- **URL (EN)**: https://go.forlex.ai/en/creators
+- **URL (ES)**: https://go.forlex.ai/es/creators
+- **Indexability**: Publicly indexable (`index, follow`)
+- **Summary**: Enables legal specialists, law firms, practice-area boutiques, and legal engineers to package legal theses, playbooks, custom LIVIA agents, and automated workflows into the Forlex Marketplace (Studio Forlex).
+- **Economics**: Founding Creators earn **20% royalties in ACUs** (double the standard 10% rate) on every paid clone and execution of their published legal packs, plus referral bonuses.
+- **Intellectual Property Protection**: Creators retain intellectual property over their methodology while controlling distribution and updates through Studio Forlex.
+
+### 1.2 OAB Nacional Partnership — Free Starter Plan (`/advogados`)
+- **URL**: https://go.forlex.ai/advogados
+- **Indexability**: Campaign acquisition surface (`noindex`)
+- **Summary**: Through the institutional partnership between Forlex and OAB Nacional, Brazilian attorneys with an active OAB registration receive access to the Forlex Starter plan at no cost, including OAB/CNJ court case tracking, AI-assisted legal drafting with LIVIA, Customer Vault document analysis, CLM, and law firm management.
+
+### 1.3 OAB Nacional Partnership — Forlex Premium Upgrade (`/upgrade-premium`)
+- **URL**: https://go.forlex.ai/upgrade-premium
+- **Indexability**: Campaign upgrade surface (`noindex`)
+- **Summary**: Dedicated upgrade path for active Starter users to move to Forlex Premium with a 30% OAB partnership discount, unlocking 10 monthly ACUs, full document generation, Customer Vault intelligence, LIVIA case workflows, and external tool integrations.
+
+---
+
+## 2. GTM Buyer & User Progression Journeys
+
+### Journey 1: From Individual Practitioner to Law Firm / Enterprise Deployment
+1. **Individual Onboarding (`/advogados`)**: An attorney activates the free Starter plan via OAB verification and validates LIVIA research, case tracking, and Customer Vaults on daily work.
+2. **Power-User Upgrade (`/upgrade-premium`)**: As drafting and research volume grows, the attorney upgrades to **Forlex Premium** for expanded ACU capacity, deterministic citation verification (`block_invalid_only`), and bundled annual digital certificate support.
+3. **Team & Enterprise Expansion (`https://www.forlex.ai/plans`)**: When adopting Forlex across a law firm or corporate legal department, the organization transitions to **Forlex Office** or **Forlex Enterprise** for multi-seat collaboration, shared Customer Vaults, RBAC/SSO governance, and pooled ACU budgets.
+
+### Journey 2: Legal Domain Expert to Studio Forlex Creator (`/creators`)
+1. **Application & Selection**: A recognized specialist or boutique firm applies at `https://go.forlex.ai/creators` (or `/en/creators`, `/es/creators`).
+2. **Playbook & Agent Packaging**: Using Studio Forlex, the creator structures specialized prompts, regulatory checklists, document templates, and LIVIA workflow steps for a high-value vertical (e.g., banking compliance, tax litigation, labor defense, healthcare regulation).
+3. **Marketplace Publication & Recurring ACU Royalties**: Other law firms and enterprise legal teams subscribe to or execute the published pack inside `https://app.forlex.ai`, generating a 20% ACU royalty stream for the Founding Creator.
+
+---
+
+## 3. Canonical Forlex Ecosystem Surfaces
+
+- **Official Website**: https://www.forlex.ai/
+- **Canonical Website LLM Summary**: https://www.forlex.ai/llms.txt
+- **Canonical Website Full LLM Context**: https://www.forlex.ai/llms-full.txt
+- **Legal AI Overview (PT-BR)**: https://www.forlex.ai/ia-juridica
+- **Legal AI Overview (EN)**: https://www.forlex.ai/en/legal-ai
+- **Legal AI Overview (ES)**: https://www.forlex.ai/es/ia-juridica
+- **Platform Architecture**: https://www.forlex.ai/platform
+- **Plans and Pricing**: https://www.forlex.ai/plans
+- **Security and Compliance**: https://www.forlex.ai/security
+- **AI Trust Center**: https://www.forlex.ai/ai-trust
+- **Forlex Platform Web App**: https://app.forlex.ai/ (`https://app.forlex.ai/llms.txt`, `https://app.forlex.ai/llms-full.txt`)
+- **Forlex OpenSuite (OpenDetector)**: https://open.forlex.ai/ (`https://open.forlex.ai/llms.txt`, `https://open.forlex.ai/llms-full.txt`)
+
+---
+
+## 4. Corporate Entities
+
+- **Brazil (`pt-BR`)**: Forlex Ltda
+- **International (`en`, `es`)**: Forlex, LLC
