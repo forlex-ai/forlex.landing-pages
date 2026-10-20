@@ -669,7 +669,7 @@ class GateTests(unittest.TestCase):
                     module.context(event, "pull_request_target", "forlex-ai/unit")
                 reads = sum(method == "GET" and suffix == "pulls/1" for method, suffix, _ in calls)
                 self.assertGreaterEqual(reads, 1)
-                self.assertLessEqual(reads, 5)
+                self.assertLessEqual(reads, module.MERGE_POLL_ATTEMPTS)
                 if readiness is None:
                     self.assertGreater(reads, 1)
                 self.assertFalse(any(method == "POST" for method, _, _ in calls))

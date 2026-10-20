@@ -31,8 +31,11 @@ EXCEPTION_FIELDS = {
 }
 CHECK_NAME = "TruffleHog secret scan"
 HISTORY_CHECK_NAME = "TruffleHog history scan"
-MERGE_POLL_ATTEMPTS = 5
-MERGE_POLL_INTERVAL = 1
+MERGE_POLL_ATTEMPTS = 12
+MERGE_POLL_INTERVAL = 2
+GITHUB_RETRY_ATTEMPTS = 5
+GITHUB_RETRY_INTERVAL = 1
+GITHUB_MAX_RATE_LIMIT_SLEEP = 180
 OUTPUT_LIMIT = 256 * 1024 * 1024
 DIAGNOSTIC_LIMIT = 16 * 1024 * 1024
 POLICY_LIMIT = 1024 * 1024
@@ -861,6 +864,45 @@ def scan(
     return report
 
 
+def _is_retryable_github_http_error(error: urllib.error.HTTPError) -> bool:
+    """Check whether a GitHub API failure is a transient gateway or rate-limit response.
+
+    Returns:
+        True when the HTTP error should be retried.
+    """
+    if type(error.code) is not int:
+        return False
+    if error.code in {429, 500, 502, 503, 504}:
+        return True
+    if error.code == 403 and error.headers is not None:
+        remaining = error.headers.get("X-RateLimit-Remaining")
+        retry_after = error.headers.get("Retry-After")
+        if remaining == "0":
+            return True
+        if type(retry_after) is str and re.fullmatch(r"[0-9]{1,12}", retry_after):
+            return True
+    return False
+
+
+def _github_retry_delay(error: urllib.error.HTTPError, attempt: int) -> int:
+    """Compute a bounded retry sleep honoring Retry-After or X-RateLimit-Reset.
+
+    Returns:
+        Sleep duration in seconds before the next retry attempt.
+    """
+    if error.headers is not None:
+        retry_after = error.headers.get("Retry-After")
+        if type(retry_after) is str and re.fullmatch(r"[0-9]{1,12}", retry_after):
+            bounded = max(int(retry_after), GITHUB_RETRY_INTERVAL)
+            return min(bounded, GITHUB_MAX_RATE_LIMIT_SLEEP)
+        remaining = error.headers.get("X-RateLimit-Remaining")
+        reset = error.headers.get("X-RateLimit-Reset")
+        if remaining == "0" and type(reset) is str and re.fullmatch(r"[0-9]{1,12}", reset):
+            wait = max(int(reset) - int(time.time()) + 1, GITHUB_RETRY_INTERVAL)
+            return min(wait, GITHUB_MAX_RATE_LIMIT_SLEEP)
+    return min(GITHUB_RETRY_INTERVAL * (attempt + 1), GITHUB_MAX_RATE_LIMIT_SLEEP)
+
+
 def github(repository, suffix, *, method="GET", body=None):
     """Use scoped GitHub APIs without exposing tokens or response bodies.
 
@@ -883,14 +925,32 @@ def github(repository, suffix, *, method="GET", body=None):
     data = json.dumps(body).encode() if body is not None else None
     if data is not None:
         headers["Content-Type"] = "application/json"
-    request = urllib.request.Request(
-        "https://api.github.com/repos/" + repository + "/" + suffix, data=data, headers=headers, method=method
-    )
-    try:
-        with urllib.request.urlopen(request, timeout=30) as response:
-            return strict_json(response.read().decode())
-    except (urllib.error.URLError, ValueError, OSError) as error:
-        raise SecretScanRefusal("GitHub request failed") from error
+    url = "https://api.github.com/repos/" + repository + ("/" + suffix if suffix else "")
+    request = urllib.request.Request(url, data=data, headers=headers, method=method)
+    for attempt in range(GITHUB_RETRY_ATTEMPTS):
+        try:
+            with urllib.request.urlopen(request, timeout=30) as response:
+                return strict_json(response.read().decode())
+        except urllib.error.HTTPError as error:
+            try:
+                can_retry = attempt + 1 < GITHUB_RETRY_ATTEMPTS
+                retryable = can_retry and _is_retryable_github_http_error(error)
+                delay = _github_retry_delay(error, attempt) if retryable else 0
+            finally:
+                error.close()
+            if retryable:
+                time.sleep(delay)
+                continue
+            raise SecretScanRefusal("GitHub request failed") from error
+        except urllib.error.URLError as error:
+            if attempt + 1 < GITHUB_RETRY_ATTEMPTS:
+                delay = min(GITHUB_RETRY_INTERVAL * (attempt + 1), GITHUB_MAX_RATE_LIMIT_SLEEP)
+                time.sleep(delay)
+                continue
+            raise SecretScanRefusal("GitHub request failed") from error
+        except (ValueError, OSError) as error:
+            raise SecretScanRefusal("GitHub request failed") from error
+    raise SecretScanRefusal("GitHub request failed")
 
 
 def pr_facts(repository, number, integration_branch):
@@ -1198,7 +1258,7 @@ def publish(source, report):
 
     try:
         for target, identity in targets:
-            if success and source["pr"] and not unchanged_pr():
+            if results and success and source["pr"] and not unchanged_pr():
                 success = False
                 conclusion = "failure"
                 summary = "Result: failure. Current PR context changed or could not be verified; a fresh scan is required. Raw secrets and verification responses are never published."
