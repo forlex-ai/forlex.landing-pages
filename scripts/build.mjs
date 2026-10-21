@@ -132,13 +132,25 @@ function tagCtas(html, slug) {
   });
 }
 
-function buildTrackingJs({ slug, version, posthogKey, posthogHost, pixelId, baseUrl, disabled }) {
+function buildTrackingJs({
+  slug,
+  version,
+  posthogKey,
+  posthogHost,
+  datadogClientToken,
+  datadogSite,
+  pixelId,
+  baseUrl,
+  disabled,
+}) {
   let js = readFileSync(TRACKING_SRC, 'utf8');
   const replacements = {
     __LP_SLUG__: slug,
     __LP_VERSION__: version,
     __POSTHOG_KEY__: posthogKey,
     __POSTHOG_HOST__: posthogHost,
+    __DATADOG_CLIENT_TOKEN__: datadogClientToken || '',
+    __DATADOG_SITE__: datadogSite || 'datadoghq.eu',
     __META_PIXEL_ID__: pixelId,
     __BASE_URL__: baseUrl,
     __TRACKING_DISABLED__: disabled ? 'true' : 'false',
@@ -161,6 +173,8 @@ function main() {
   const baseUrl = env('LP_BASE_URL', 'https://go.forlex.ai').replace(/\/+$/, '');
   const posthogKey = env('LP_POSTHOG_KEY', '');
   const posthogHost = env('LP_POSTHOG_HOST', 'https://b.forlex.ai').replace(/\/+$/, '');
+  const datadogClientToken = env('LP_DATADOG_CLIENT_TOKEN', '');
+  const datadogSite = env('LP_DATADOG_SITE', 'datadoghq.eu').replace(/\/+$/, '');
   const pixelId = env('LP_META_PIXEL_ID', '');
   const robotsOverride = env('LP_ROBOTS', '');
   const disabled = env('LP_DISABLE_TRACKING', 'false') === 'true';
@@ -205,6 +219,8 @@ function main() {
       version: config.version || 'v1',
       posthogKey,
       posthogHost,
+      datadogClientToken,
+      datadogSite,
       pixelId,
       baseUrl,
       disabled,

@@ -30,6 +30,8 @@
   var LP_VERSION = '__LP_VERSION__';
   var POSTHOG_KEY = '__POSTHOG_KEY__';
   var POSTHOG_HOST = '__POSTHOG_HOST__';
+  var DATADOG_CLIENT_TOKEN = '__DATADOG_CLIENT_TOKEN__';
+  var DATADOG_SITE = '__DATADOG_SITE__';
   var META_PIXEL_ID = '__META_PIXEL_ID__';
   var TRACKING_DISABLED = '__TRACKING_DISABLED__' === 'true';
 
@@ -292,6 +294,23 @@
     event.preventDefault();
   }
 
+  function datadogCapture(event, properties) {
+    if (TRACKING_DISABLED) return;
+    if (isDnt()) return;
+    // Security & quota invariant: never call http-intake.logs directly from public
+    // browser code (which would expose log ingestion to quota-exhaustion attacks
+    // against the 345M Indexed Logs pool). Emit strictly via Datadog Browser RUM
+    // custom actions (governed by RUM applicationId + clientToken under the 700K
+    // RUM / Product Analytics session pool on EU1 datadoghq.eu).
+    try {
+      if (window.DD_RUM && typeof window.DD_RUM.addAction === 'function') {
+        window.DD_RUM.addAction(event, properties);
+      }
+    } catch (e) {
+      /* best-effort */
+    }
+  }
+
   function onCtaClick(event) {
     var anchor = event.currentTarget;
     if (event.defaultPrevented) {
@@ -314,6 +333,7 @@
       cta_utm_campaign: hrefUtms.utm_campaign,
     });
     posthogCapture('lp_cta_clicked', props);
+    datadogCapture('lp_cta_clicked', props);
     var position = metaCtaPosition(anchor, block);
     fbqTrack(LP_SLUG === 'upgrade-premium' ? 'InitiateCheckout' : 'Lead', {
       content_name: metaContentName(),
@@ -343,8 +363,10 @@
   }
 
   function pageView() {
-    posthogCapture('lp_page_viewed', baseProps());
-    posthogCapture('$pageview', baseProps());
+    var props = baseProps();
+    posthogCapture('lp_page_viewed', props);
+    posthogCapture('$pageview', props);
+    datadogCapture('lp_page_viewed', props);
     fbqTrack('PageView');
     fbqTrack('ViewContent', { content_name: metaContentName() });
   }
