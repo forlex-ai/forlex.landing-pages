@@ -1,8 +1,8 @@
 # Forlex Landing Pages - Memory
 
-Durable repo memory: why things are the way they are. Update when decisions change.
+Durable repo memory: why things are the way they are. Read `AGENTS.md` first for operating rules, then use this file for architectural decisions, hosting/analytics contracts, and recurring operational gotchas.
 
-## Decisions
+## Architecture & Repository Decisions
 
 - **Separate repo, not `forlex.site` pages (2026-10-01).** Campaign LPs need
   isolated deploys (seconds, independent of the Nuxt release train), drop-in
@@ -17,6 +17,13 @@ Durable repo memory: why things are the way they are. Update when decisions chan
   dot-convention (`forlex.site`, `forlex.infra`). Hyphenated identifiers stay
   where required: Vercel project `forlex-landing-pages` (dots disallowed), npm
   `@forlex/landing-pages`, PostHog `app: 'forlex-landing-pages'`.
+- **Base64 kept for v1 (2026-10-01).** LP A ~1.2 MB / LP B ~680 KB ship
+  as-is for pixel-perfect launch. `scripts/extract-assets.mjs` exists for the
+  Lighthouse follow-up (57–61% of bytes are embedded); extraction is a
+  deliberate follow-up, not part of the build.
+
+## Hosting, Domains & Analytics Decisions
+
 - **URL strategy (2026-10-01).** Primary LP host `go.forlex.ai` (this repo's
   Vercel project). ENG-4705 spec URLs (`forlex.ai/advogados`,
   `forlex.ai/upgrade-premium`) served via **rewrites** in `forlex.site`
@@ -27,10 +34,6 @@ Durable repo memory: why things are the way they are. Update when decisions chan
   Events: `lp_page_viewed` (+ `$pageview`) and `lp_cta_clicked`. Meta Pixel:
   `PageView` + `Lead` per CTA. Respects DNT for PostHog; no-ops cleanly
   without keys.
-- **Base64 kept for v1 (2026-10-01).** LP A ~1.2 MB / LP B ~680 KB ship
-  as-is for pixel-perfect launch. `scripts/extract-assets.mjs` exists for the
-  Lighthouse follow-up (57–61% of bytes are embedded); extraction is a
-  deliberate follow-up, not part of the build.
 - **`robots=noindex` default (2026-10-01).** Both ENG-4705 LPs ship `noindex`
   until João approves indexing. Flip via `LP_ROBOTS` env, not source edits.
 - **Primary host `go.forlex.ai` (2026-10-01).** `lp.forlex.ai` was already
@@ -44,18 +47,16 @@ Durable repo memory: why things are the way they are. Update when decisions chan
   public, `*.vercel.app` + previews SSO-gated). Deploys run via the temporary
   `deploy.yml` bridge until the Vercel GitHub App is granted repo access.
 
-## Gotchas
+## CI, Tooling & Git Gotchas
 
 - `gh` push auth: the sandbox git credential helper may present as
-  `cursor[bot]` (403 on push). Push with an explicit token remote:
-  `git -c credential.helper= push "https://x-access-token:$TOKEN@github.com/..."`.
+  `cursor[bot]` (403 on push). Push with an explicit token remote when needed, without logging tokens.
 - Vercel CLI auth: the CLI reads `VERCEL_TOKEN`, not `VERCEL_ACCESS_TOKEN`.
   Export `VERCEL_TOKEN="$VERCEL_ACCESS_TOKEN"` before `vercel` commands.
 - `setup-node` npm cache and `npm ci` both fail without a lockfile — this
   repo must keep `npm install` in CI and Vercel install step.
 - Direct push to `forlex.backend:test` is blocked by repo rules (requires
-  the Pipeline Summary check) — land via feature branch + PR.
-- **Shared-doc merge & scanner hygiene:** insert updates in `AGENTS.md` and `MEMORY.md` under their matching domain heading (never append raw entries at EOF), keep both files free of secret-scanner triggers rather than adding commit-SHA-pinned `.forlex/security/exceptions.json` entries, and commit shared-doc updates separately from code/CI changes.
+  the Pipeline Summary check) — land via feature branch + PR targeting `--base test`.
 - The LP-A `?brands=0` flag and brand rotation live in `source.html`; the
   build must never strip the `URLSearchParams` bootstrap snippet.
 - Playwright MCP screenshots can only write under `/workspace` — copy to
@@ -67,3 +68,9 @@ Durable repo memory: why things are the way they are. Update when decisions chan
 - Designed OG images to replace `public/og/*.png` placeholders.
 - `LP_POSTHOG_KEY` + `LP_META_PIXEL_ID` values in Vercel env.
 - Canonical Figma confirmation (renamed file, same file ID).
+
+## When To Update This File
+
+- Add durable lessons here after they have been verified in this repo (architectural tradeoffs, build/tracking contracts, deployment rules, or recurring CI/tooling gotchas).
+- Remove or rewrite stale entries when decisions change; do not stack contradictory notes.
+- **Anti-conflict & scanner hygiene:** insert updates in `AGENTS.md` and `MEMORY.md` under their matching `##` domain heading (never append raw entries at EOF, where concurrent PRs collide in 3-way Git merges), keep both files free of secret-scanner triggers rather than adding commit-SHA-pinned `.forlex/security/exceptions.json` entries, and commit shared-doc updates separately from code/CI changes.

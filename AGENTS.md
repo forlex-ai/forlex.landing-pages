@@ -66,7 +66,6 @@ Before editing, read only the context needed for the task:
   `LP_ROBOTS` Vercel env, not by editing sources).
 - Never commit `.env` files, real PostHog keys, or Pixel IDs. Placeholders only
   (`<phc_...>`) — `security.yml` scans for secret patterns.
-- **Anti-conflict & scanner hygiene for `AGENTS.md` and `MEMORY.md`:** insert new notes under their matching domain heading (never append raw entries at EOF, where concurrent PRs collide in 3-way Git merges), keep both files content-clean of false-positive secret-scanner literals (enforced by `.github/workflows/secret-scan.yml` and `.forlex/security/secret_scan.py`) instead of adding commit-SHA-bound `.forlex/security/exceptions.json` rules, and separate code/CI commits from shared-doc (`AGENTS.md` / `MEMORY.md`) commits in multi-file PRs.
 
 ## Zero-Dependency Contract
 
@@ -118,6 +117,13 @@ This repo intentionally has **no runtime dependencies and no lockfile**:
   Redeploy after changing them.
 - Every PR gets a Vercel Preview URL. Post `<preview>/advogados` and
   `<preview>/upgrade-premium` (+ `?static=1` screenshots) on the Linear issue.
+
+## Branch Promotion & Git Workflow
+
+- **Two-branch promotion (`test` → `main`):** `test` is the integration branch and `main` is the production branch. Feature branches must be cut from `origin/test` and opened as Pull Requests targeting `--base test` — never open feature PRs directly against `main`.
+- **Promotion PRs:** Only promote changes from `test` to `main` after `npm run qa`, `npm run build`, and `npm run qa:built` pass and preview URLs are verified.
+- **Submodule workflow (`forlex.backend`):** Treat `libs/forlex.landing-pages` as an independent repository and delivery unit. Push feature branches and merge PRs to `test` inside `forlex.landing-pages` first, then bump the gitlink pointer in `forlex.backend` to the merged `origin/test` commit.
+- **Anti-conflict & scanner hygiene for `AGENTS.md` and `MEMORY.md`:** insert new notes under their matching domain heading (never append raw entries at EOF, where concurrent PRs collide in 3-way Git merges), keep both files content-clean of false-positive secret-scanner literals (enforced by `.github/workflows/secret-scan.yml` and `.forlex/security/secret_scan.py`) instead of adding commit-SHA-bound `.forlex/security/exceptions.json` rules, and separate code/CI commits from shared-doc (`AGENTS.md` / `MEMORY.md`) commits in multi-file PRs.
 
 ## Sibling Repos
 
